@@ -22,33 +22,7 @@
 body{font-family:'Instrument Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;font-size:14px}
 h1,h2,h3,h4{font-family:'Bricolage Grotesque',sans-serif}
 
-/* ── LOGIN SCREEN ── */
-#loginScreen{
-  position:fixed;inset:0;background:var(--ink);
-  display:flex;align-items:center;justify-content:center;
-  z-index:1000;flex-direction:column;gap:0;
-}
-.login-card{
-  background:var(--paper);border-radius:18px;
-  padding:48px 44px;width:380px;max-width:92vw;
-  box-shadow:var(--shadow-lg);text-align:center;
-}
-.login-logo{font-family:'Bricolage Grotesque',sans-serif;font-size:36px;font-weight:800;margin-bottom:6px}
-.login-logo em{color:var(--green);font-style:normal}
-.login-sub{color:var(--muted);font-size:14px;margin-bottom:36px;line-height:1.5}
-.btn-google{
-  display:flex;align-items:center;justify-content:center;gap:12px;
-  width:100%;padding:13px 20px;
-  background:white;border:2px solid var(--line);
-  border-radius:10px;cursor:pointer;
-  font-size:14px;font-weight:600;
-  font-family:'Instrument Sans',sans-serif;
-  color:var(--ink);transition:all .2s;
-  box-shadow:var(--shadow);
-}
-.btn-google:hover{border-color:var(--ink);box-shadow:var(--shadow-lg);transform:translateY(-1px)}
-.btn-google img{width:20px;height:20px}
-.login-note{margin-top:16px;font-size:12px;color:var(--muted)}
+
 
 /* ── HEADER ── */
 header{
@@ -68,15 +42,7 @@ header{
 .month-btn:hover{background:rgba(255,255,255,.2)}
 #monthLabel{font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:600;min-width:115px;text-align:center}
 .header-right{display:flex;align-items:center;gap:10px}
-.user-chip{
-  display:flex;align-items:center;gap:8px;
-  background:rgba(255,255,255,.1);
-  border-radius:20px;padding:4px 12px 4px 4px;cursor:pointer;
-  transition:background .15s;
-}
-.user-chip:hover{background:rgba(255,255,255,.18)}
-.user-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover}
-.user-name{font-size:12px;font-weight:500;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 #syncStatus{font-size:11px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:5px}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3)}
 .sync-dot.ok{background:#7ec8a0}
@@ -196,20 +162,6 @@ header{
 </head>
 <body>
 
-<!-- ── LOGIN ── -->
-<div id="loginScreen">
-  <div class="login-card">
-    <div class="login-logo">bütçe<em>.</em></div>
-    <div class="login-sub">Tüm cihazlarından erişebileceğin<br>kişisel finans takip sistemi</div>
-    <button class="btn-google" id="loginBtn" onclick="signInGoogle()">
-      <img src="https://www.google.com/favicon.ico" alt="G">
-      Google ile Giriş Yap
-    </button>
-    <div id="loginErr" style="color:#c1121f;font-size:12px;margin-top:8px;min-height:16px"></div>
-    <div class="login-note">Veriler Firebase'de güvenli şekilde saklanır.<br>Sadece senin hesabın erişebilir.</div>
-  </div>
-</div>
-
 <!-- ── HEADER ── -->
 <header>
   <div class="logo">bütçe<em>.</em></div>
@@ -220,10 +172,6 @@ header{
   </div>
   <div class="header-right">
     <div id="syncStatus"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">—</span></div>
-    <div class="user-chip" onclick="signOut()">
-      <img class="user-avatar" id="userAvatar" src="" alt="">
-      <span class="user-name" id="userName"></span>
-    </div>
   </div>
 </header>
 
@@ -327,7 +275,6 @@ header{
   <!-- AYARLAR -->
   <div id="tab-ayarlar" class="page">
     <div class="sett-section">
-      <div class="sett-row"><div><div class="sett-label">Hesap</div><div class="sett-sub" id="settUser">—</div></div><button class="btn-sm danger" onclick="signOut()">Çıkış Yap</button></div>
       <div class="sett-row"><div><div class="sett-label">Veritabanı</div><div class="sett-sub">Firebase Firestore — gerçek zamanlı senkronizasyon</div></div><div style="font-size:12px;color:var(--muted)" id="settSync">—</div></div>
     </div>
     <div class="sett-section">
@@ -357,20 +304,11 @@ header{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
-  getAuth, GoogleAuthProvider,
-  signInWithPopup, signInWithRedirect, getRedirectResult,
-  signOut as fbSignOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {
   getFirestore, doc, collection,
   onSnapshot, setDoc, deleteDoc,
   getDocs, writeBatch, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ══════════════════════════════════════════
-// 🔧 BURAYA KENDİ Firebase CONFIG'İNİ YAZ
-// ══════════════════════════════════════════
 const firebaseConfig = {
   apiKey:            "AIzaSyCLfCUmfz2G4ctjrSlg0c3jEDR_nOF_-RA",
   authDomain:        "butce-a.firebaseapp.com",
@@ -379,33 +317,31 @@ const firebaseConfig = {
   messagingSenderId: "924090596352",
   appId:             "1:924090596352:web:134778b8f8d390c8016ce5"
 };
-// ══════════════════════════════════════════
 
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
 
-let uid = null;
-let unsubTxns = null;
-let unsubCats = null;
-let unsubBudgets = null;
+// Tek sabit kullanıcı — giriş yok
+const UID = "alp";
+
+let unsubTxns = null, unsubCats = null, unsubBudgets = null;
 
 const DEFAULT_CATS = [
-  {id:'food',name:'Yemek',icon:'🍔',type:'exp'},
-  {id:'market',name:'Market',icon:'🛒',type:'exp'},
-  {id:'trans',name:'Ulaşım',icon:'🚌',type:'exp'},
-  {id:'bills',name:'Faturalar',icon:'💡',type:'exp'},
-  {id:'rent',name:'Kira',icon:'🏠',type:'exp'},
-  {id:'health',name:'Sağlık',icon:'💊',type:'exp'},
-  {id:'ent',name:'Eğlence',icon:'🎬',type:'exp'},
-  {id:'clothes',name:'Giyim',icon:'👕',type:'exp'},
-  {id:'tech',name:'Teknoloji',icon:'💻',type:'exp'},
-  {id:'edu',name:'Eğitim',icon:'📚',type:'exp'},
-  {id:'other_e',name:'Diğer',icon:'📌',type:'exp'},
-  {id:'salary',name:'Maaş',icon:'💰',type:'inc'},
-  {id:'freelance',name:'Freelance',icon:'🎯',type:'inc'},
-  {id:'invest',name:'Yatırım',icon:'📈',type:'inc'},
-  {id:'other_i',name:'Diğer Gelir',icon:'✨',type:'inc'},
+  {id:'food',    name:'Yemek',       icon:'🍔', type:'exp'},
+  {id:'market',  name:'Market',      icon:'🛒', type:'exp'},
+  {id:'trans',   name:'Ulaşım',      icon:'🚌', type:'exp'},
+  {id:'bills',   name:'Faturalar',   icon:'💡', type:'exp'},
+  {id:'rent',    name:'Kira',        icon:'🏠', type:'exp'},
+  {id:'health',  name:'Sağlık',      icon:'💊', type:'exp'},
+  {id:'ent',     name:'Eğlence',     icon:'🎬', type:'exp'},
+  {id:'clothes', name:'Giyim',       icon:'👕', type:'exp'},
+  {id:'tech',    name:'Teknoloji',   icon:'💻', type:'exp'},
+  {id:'edu',     name:'Eğitim',      icon:'📚', type:'exp'},
+  {id:'other_e', name:'Diğer',       icon:'📌', type:'exp'},
+  {id:'salary',  name:'Maaş',        icon:'💰', type:'inc'},
+  {id:'freelance',name:'Freelance',  icon:'🎯', type:'inc'},
+  {id:'invest',  name:'Yatırım',     icon:'📈', type:'inc'},
+  {id:'other_i', name:'Diğer Gelir', icon:'✨', type:'inc'},
 ];
 
 // ── GLOBAL STATE ──
@@ -413,107 +349,62 @@ window.S = { transactions:[], categories:[...DEFAULT_CATS], budgets:{} };
 window.curMonth = new Date(); window.curMonth.setDate(1);
 window.qType = 'exp'; window.fType = 'exp';
 
-// ── AUTH ──
-window.signInGoogle = async () => {
-  try {
-    const btn = document.getElementById('loginBtn');
-    btn.textContent = 'Yönlendiriliyor...';
-    btn.disabled = true;
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
-  } catch(e) {
-    document.getElementById('loginErr').textContent = 'Hata: ' + e.message;
-    const btn = document.getElementById('loginBtn');
-    btn.innerHTML = '<img src="https://www.google.com/favicon.ico" alt="G" style="width:20px;height:20px"> Google ile Giriş Yap';
-    btn.disabled = false;
-  }
-};
-
-// Redirect sonrası döndüğümüzde sonucu al
-getRedirectResult(auth).catch(e => {
-  if (e && e.code !== 'auth/no-current-user') {
-    const el = document.getElementById('loginErr');
-    if (el) el.textContent = 'Giriş hatası: ' + e.message;
-  }
-});
-window.signOut = async () => {
-  if(!confirm('Çıkış yapmak istiyor musun?')) return;
-  if(unsubTxns) unsubTxns();
-  if(unsubCats) unsubCats();
-  if(unsubBudgets) unsubBudgets();
-  await fbSignOut(auth);
-  document.getElementById('loginScreen').style.display='flex';
-};
-
-onAuthStateChanged(auth, async user => {
-  if(user) {
-    uid = user.uid;
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('userAvatar').src = user.photoURL||'';
-    document.getElementById('userName').textContent = user.displayName?.split(' ')[0]||'';
-    document.getElementById('settUser').textContent = user.email;
-    await initData();
-  } else {
-    uid = null;
-    document.getElementById('loginScreen').style.display='flex';
-  }
-});
-
 // ── FIRESTORE PATHS ──
-const txnCol     = () => collection(db,`users/${uid}/transactions`);
-const catCol     = () => collection(db,`users/${uid}/categories`);
-const budgetDoc  = () => doc(db,`users/${uid}/meta/budgets`);
+const txnCol    = () => collection(db, `users/${UID}/transactions`);
+const catCol    = () => collection(db, `users/${UID}/categories`);
+const budgetDoc = () => doc(db, `users/${UID}/meta/budgets`);
 
-// ── INIT DATA ──
+// ── INIT ──
 async function initData() {
-  setSyncStatus('busy','Yükleniyor...');
-
-  // Seed default categories if none exist
-  const catSnap = await getDocs(catCol());
-  if(catSnap.empty) {
+  setSyncStatus('busy', 'Yükleniyor...');
+  // Seed default categories if empty
+  const snap = await getDocs(catCol());
+  if (snap.empty) {
     const batch = writeBatch(db);
-    DEFAULT_CATS.forEach(c => batch.set(doc(catCol(),c.id), c));
+    DEFAULT_CATS.forEach(c => batch.set(doc(catCol(), c.id), c));
     await batch.commit();
   }
-
   // Real-time listeners
   unsubTxns = onSnapshot(txnCol(), snap => {
-    window.S.transactions = snap.docs.map(d=>({id:d.id,...d.data()}));
-    render(); setSyncStatus('ok','Güncel');
+    window.S.transactions = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    render();
+    setSyncStatus('ok', 'Güncel');
   });
   unsubCats = onSnapshot(catCol(), snap => {
-    window.S.categories = snap.docs.map(d=>({id:d.id,...d.data()}));
+    window.S.categories = snap.docs.map(d => ({id:d.id, ...d.data()}));
     render();
   });
   unsubBudgets = onSnapshot(budgetDoc(), snap => {
-    window.S.budgets = snap.exists() ? (snap.data().data||{}) : {};
+    window.S.budgets = snap.exists() ? (snap.data().data || {}) : {};
     render();
   });
 }
 
+initData();
+
 // ── ADD TRANSACTION ──
 window.addTxn = async (form) => {
-  const p = form==='quick' ? {n:'q_n',a:'q_a',d:'q_d',c:'q_c',note:null,type:window.qType}
-                           : {n:'f_n',a:'f_a',d:'f_d',c:'f_c',note:'f_note',type:window.fType};
+  const p = form === 'quick'
+    ? {n:'q_n', a:'q_a', d:'q_d', c:'q_c', note:null, type:window.qType}
+    : {n:'f_n', a:'f_a', d:'f_d', c:'f_c', note:'f_note', type:window.fType};
   const name   = document.getElementById(p.n).value.trim();
   const amount = parseFloat(document.getElementById(p.a).value);
   const date   = document.getElementById(p.d).value;
   const cat    = document.getElementById(p.c).value;
   const note   = p.note ? document.getElementById(p.note).value.trim() : '';
-  if(!name||!amount||!date){ toast('Açıklama, tutar ve tarih gerekli','err'); return; }
-  setSyncStatus('busy','Kaydediliyor...');
-  const id = Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-  await setDoc(doc(txnCol(),id),{name,amount,date,type:p.type,category:cat||'other_e',note,createdAt:serverTimestamp()});
-  document.getElementById(p.n).value='';
-  document.getElementById(p.a).value='';
-  if(p.note) document.getElementById(p.note).value='';
-  toast('İşlem eklendi ✓','ok');
+  if (!name || !amount || !date) { toast('Açıklama, tutar ve tarih gerekli', 'err'); return; }
+  setSyncStatus('busy', 'Kaydediliyor...');
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+  await setDoc(doc(txnCol(), id), {name, amount, date, type:p.type, category:cat||'other_e', note, createdAt:serverTimestamp()});
+  document.getElementById(p.n).value = '';
+  document.getElementById(p.a).value = '';
+  if (p.note) document.getElementById(p.note).value = '';
+  toast('Eklendi ✓', 'ok');
 };
 
 // ── DELETE TRANSACTION ──
 window.delTxn = async (id) => {
-  setSyncStatus('busy','Siliniyor...');
-  await deleteDoc(doc(txnCol(),id));
+  await deleteDoc(doc(txnCol(), id));
   toast('Silindi');
 };
 
@@ -521,55 +412,59 @@ window.delTxn = async (id) => {
 window.saveBudget = async () => {
   const cat = document.getElementById('b_c').value;
   const amt = parseFloat(document.getElementById('b_a').value);
-  if(!cat||!amt){ toast('Kategori ve limit gerekli','err'); return; }
-  const newBudgets = {...window.S.budgets,[cat]:amt};
-  await setDoc(budgetDoc(),{data:newBudgets});
-  document.getElementById('b_a').value='';
-  toast('Bütçe kaydedildi ✓','ok');
+  if (!cat || !amt) { toast('Kategori ve limit gerekli', 'err'); return; }
+  await setDoc(budgetDoc(), {data: {...window.S.budgets, [cat]: amt}});
+  document.getElementById('b_a').value = '';
+  toast('Bütçe kaydedildi ✓', 'ok');
 };
 
 // ── ADD CATEGORY ──
 window.addCat = async () => {
   const name = document.getElementById('nc_name').value.trim();
-  const icon = document.getElementById('nc_icon').value.trim()||'📌';
+  const icon = document.getElementById('nc_icon').value.trim() || '📌';
   const type = document.getElementById('nc_type').value;
-  if(!name){ toast('Kategori adı gerekli','err'); return; }
-  const id = name.toLowerCase().replace(/[^a-z0-9]/g,'_')+'_'+Date.now().toString(36);
-  await setDoc(doc(catCol(),id),{name,icon,type});
-  document.getElementById('nc_name').value='';
-  document.getElementById('nc_icon').value='';
-  toast('Kategori eklendi ✓','ok');
+  if (!name) { toast('Kategori adı gerekli', 'err'); return; }
+  const id = name.toLowerCase().replace(/[^a-z0-9]/g,'_') + '_' + Date.now().toString(36);
+  await setDoc(doc(catCol(), id), {name, icon, type});
+  document.getElementById('nc_name').value = '';
+  document.getElementById('nc_icon').value = '';
+  toast('Kategori eklendi ✓', 'ok');
 };
 
 // ── DELETE CATEGORY ──
 window.deleteCat = async (id) => {
-  await deleteDoc(doc(catCol(),id));
-  toast('Kategori silindi');
+  await deleteDoc(doc(catCol(), id));
+  toast('Silindi');
 };
 
 // ── CLEAR MONTH ──
 window.clearMonth = async () => {
-  if(!confirm('Bu ayın tüm işlemleri silinecek. Emin misin?')) return;
-  const txns = monthTxns();
+  if (!confirm('Bu ayın tüm işlemleri silinecek. Emin misin?')) return;
   const batch = writeBatch(db);
-  txns.forEach(t => batch.delete(doc(txnCol(),t.id)));
+  monthTxns().forEach(t => batch.delete(doc(txnCol(), t.id)));
   await batch.commit();
-  toast('Ay temizlendi','ok');
+  toast('Ay temizlendi', 'ok');
 };
 
 // ── EXPORT ──
 window.exportData = () => {
-  const blob = new Blob([JSON.stringify({transactions:window.S.transactions,categories:window.S.categories,budgets:window.S.budgets},null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='butce_verisi.json'; a.click();
+  const blob = new Blob([JSON.stringify(window.S, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'butce_verisi.json';
+  a.click();
 };
 
 // ── SYNC STATUS ──
-function setSyncStatus(st,txt) {
-  const dot=document.getElementById('syncDot');
-  const t=document.getElementById('syncTxt');
-  dot.className='sync-dot'+(st?' '+st:'');
-  t.textContent=txt;
-  if(st==='ok') document.getElementById('settSync').textContent='Son güncelleme: '+new Date().toLocaleTimeString('tr-TR');
+function setSyncStatus(st, txt) {
+  const dot = document.getElementById('syncDot');
+  const t   = document.getElementById('syncTxt');
+  dot.className = 'sync-dot' + (st ? ' '+st : '');
+  t.textContent = txt;
+  if (st === 'ok') {
+    const el = document.getElementById('settSync');
+    if (el) el.textContent = 'Son güncelleme: ' + new Date().toLocaleTimeString('tr-TR');
+  }
 }
 window.setSyncStatus = setSyncStatus;
 
@@ -578,33 +473,33 @@ window.setSyncStatus = setSyncStatus;
 // ══════════════════════════════════════════
 window.render = render;
 function render() {
-  const lbl = window.curMonth.toLocaleString('tr-TR',{month:'long',year:'numeric'});
-  document.getElementById('monthLabel').textContent=lbl;
+  const lbl = window.curMonth.toLocaleString('tr-TR', {month:'long', year:'numeric'});
+  document.getElementById('monthLabel').textContent = lbl;
   renderCards(); renderRecent(); renderCatTags();
   renderTxns(); renderBudget(); renderChart();
   renderStats(); renderCatManage(); fillSelects();
 }
 
 function monthTxns() {
-  const y=window.curMonth.getFullYear(), m=window.curMonth.getMonth();
-  return window.S.transactions.filter(t=>{
-    const d=new Date(t.date);
-    return d.getFullYear()===y && d.getMonth()===m;
-  }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const y = window.curMonth.getFullYear(), m = window.curMonth.getMonth();
+  return window.S.transactions.filter(t => {
+    const d = new Date(t.date);
+    return d.getFullYear() === y && d.getMonth() === m;
+  }).sort((a,b) => new Date(b.date) - new Date(a.date));
 }
-window.monthTxns=monthTxns;
+window.monthTxns = monthTxns;
 
-function money(n){ return (+n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' ₺'; }
-function cat(id){ return window.S.categories.find(c=>c.id===id)||{name:id,icon:'📌',type:'exp'}; }
-const COLORS={food:'#fb923c',market:'#facc15',trans:'#60a5fa',bills:'#a78bfa',rent:'#f472b6',health:'#34d399',ent:'#f87171',clothes:'#e879f9',tech:'#38bdf8',edu:'#4ade80',other_e:'#94a3b8',salary:'#4ade80',freelance:'#818cf8',invest:'#2dd4bf',other_i:'#a3e635'};
-function catCol(id){ return COLORS[id]||'#8e8b80'; }
+function money(n) { return (+n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' ₺'; }
+function cat(id)  { return window.S.categories.find(c=>c.id===id) || {name:id, icon:'📌', type:'exp'}; }
+const COLORS = {food:'#fb923c',market:'#facc15',trans:'#60a5fa',bills:'#a78bfa',rent:'#f472b6',health:'#34d399',ent:'#f87171',clothes:'#e879f9',tech:'#38bdf8',edu:'#4ade80',other_e:'#94a3b8',salary:'#4ade80',freelance:'#818cf8',invest:'#2dd4bf',other_i:'#a3e635'};
+function catCol(id) { return COLORS[id] || '#8e8b80'; }
 
-function renderCards(){
-  const t=monthTxns();
-  const inc=t.filter(x=>x.type==='inc').reduce((s,x)=>s+x.amount,0);
-  const exp=t.filter(x=>x.type==='exp').reduce((s,x)=>s+x.amount,0);
-  const net=inc-exp, pct=inc>0?Math.round((net/inc)*100):0;
-  document.getElementById('summaryCards').innerHTML=`
+function renderCards() {
+  const t = monthTxns();
+  const inc = t.filter(x=>x.type==='inc').reduce((s,x)=>s+x.amount,0);
+  const exp = t.filter(x=>x.type==='exp').reduce((s,x)=>s+x.amount,0);
+  const net = inc - exp, pct = inc>0 ? Math.round((net/inc)*100) : 0;
+  document.getElementById('summaryCards').innerHTML = `
     <div class="card c-green"><div class="card-tag">💚 Gelir</div><div class="card-val">${money(inc)}</div><div class="card-sub">${t.filter(x=>x.type==='inc').length} işlem</div></div>
     <div class="card c-red"><div class="card-tag">❤️ Gider</div><div class="card-val">${money(exp)}</div><div class="card-sub">${t.filter(x=>x.type==='exp').length} işlem</div></div>
     <div class="card c-blue"><div class="card-tag">💙 Net</div><div class="card-val" style="color:${net>=0?'var(--green)':'var(--red)'}">${money(net)}</div><div class="card-sub">${net>=0?'Fazla':'Açık'}</div></div>
@@ -612,8 +507,8 @@ function renderCards(){
   `;
 }
 
-function txnRow(t){
-  const c=cat(t.category), col=catCol(t.category);
+function txnRow(t) {
+  const c = cat(t.category), col = catCol(t.category);
   return `<div class="txn">
     <div class="txn-ico" style="background:${col}20;color:${col}">${c.icon}</div>
     <div><div class="txn-name">${t.name}</div><div class="txn-cat">${c.name}${t.note?' · '+t.note:''}</div></div>
@@ -622,40 +517,40 @@ function txnRow(t){
   </div>`;
 }
 
-function renderRecent(){
-  const el=document.getElementById('recentList'); if(!el) return;
-  const list=monthTxns().slice(0,6);
-  el.innerHTML=list.length?list.map(txnRow).join(''):`<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Bu ay işlem yok</div></div>`;
+function renderRecent() {
+  const el = document.getElementById('recentList'); if (!el) return;
+  const list = monthTxns().slice(0,6);
+  el.innerHTML = list.length ? list.map(txnRow).join('') : `<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Bu ay işlem yok</div></div>`;
 }
 
-window.renderTxns=function(){
-  const el=document.getElementById('txnList'); if(!el) return;
-  const q=(document.getElementById('searchQ')?.value||'').toLowerCase();
-  let list=monthTxns();
-  if(q) list=list.filter(t=>t.name.toLowerCase().includes(q)||cat(t.category).name.toLowerCase().includes(q));
-  el.innerHTML=list.length?list.map(txnRow).join(''):`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">İşlem bulunamadı</div></div>`;
+window.renderTxns = function() {
+  const el = document.getElementById('txnList'); if (!el) return;
+  const q = (document.getElementById('searchQ')?.value||'').toLowerCase();
+  let list = monthTxns();
+  if (q) list = list.filter(t => t.name.toLowerCase().includes(q) || cat(t.category).name.toLowerCase().includes(q));
+  el.innerHTML = list.length ? list.map(txnRow).join('') : `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">İşlem bulunamadı</div></div>`;
 };
 
-function renderCatTags(){
-  const el=document.getElementById('catTags'); if(!el) return;
-  const exp={};
+function renderCatTags() {
+  const el = document.getElementById('catTags'); if (!el) return;
+  const exp = {};
   monthTxns().filter(t=>t.type==='exp').forEach(t=>{ exp[t.category]=(exp[t.category]||0)+t.amount; });
-  const sorted=Object.entries(exp).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  el.innerHTML=sorted.length?sorted.map(([id,amt])=>{
-    const c=cat(id),col=catCol(id);
+  const sorted = Object.entries(exp).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  el.innerHTML = sorted.length ? sorted.map(([id,amt])=>{
+    const c=cat(id), col=catCol(id);
     return `<div class="ctag" style="background:${col}18;border-color:${col}40;color:${col}">${c.icon} ${c.name} <strong style="margin-left:3px">${money(amt)}</strong></div>`;
-  }).join(''):`<div style="color:var(--muted);font-size:12px">Henüz gider yok</div>`;
+  }).join('') : `<div style="color:var(--muted);font-size:12px">Henüz gider yok</div>`;
 }
 
-function renderBudget(){
-  const el=document.getElementById('budgetBars'); if(!el) return;
-  const exp={};
+function renderBudget() {
+  const el = document.getElementById('budgetBars'); if (!el) return;
+  const exp = {};
   monthTxns().filter(t=>t.type==='exp').forEach(t=>{ exp[t.category]=(exp[t.category]||0)+t.amount; });
-  const entries=Object.entries(window.S.budgets);
-  if(!entries.length){ el.innerHTML=`<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">Bütçe eklenmedi</div></div>`; return; }
-  el.innerHTML=entries.map(([id,lim])=>{
-    const c=cat(id),spent=exp[id]||0,pct=Math.min(100,lim>0?(spent/lim)*100:0);
-    const col=pct>=100?'var(--red)':pct>=75?'#fb923c':'var(--green)';
+  const entries = Object.entries(window.S.budgets);
+  if (!entries.length) { el.innerHTML=`<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">Bütçe eklenmedi</div></div>`; return; }
+  el.innerHTML = entries.map(([id,lim])=>{
+    const c=cat(id), spent=exp[id]||0, pct=Math.min(100,lim>0?(spent/lim)*100:0);
+    const col = pct>=100?'var(--red)':pct>=75?'#fb923c':'var(--green)';
     return `<div class="b-row">
       <div class="b-top"><div class="b-name">${c.icon} ${c.name}</div><div class="b-nums"><strong>${money(spent)}</strong> / ${money(lim)}</div></div>
       <div class="bar"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div>
@@ -663,14 +558,14 @@ function renderBudget(){
   }).join('');
 }
 
-function renderChart(){
-  const canvas=document.getElementById('barChart'); if(!canvas) return;
-  const W=canvas.offsetWidth||600, H=155;
-  canvas.width=W; canvas.height=H;
-  const ctx=canvas.getContext('2d');
-  const months=[];
-  for(let i=5;i>=0;i--){ const d=new Date(window.curMonth); d.setMonth(d.getMonth()-i); months.push(d); }
-  const getSum=(m,type)=>window.S.transactions.filter(t=>{
+function renderChart() {
+  const canvas = document.getElementById('barChart'); if (!canvas) return;
+  const W = canvas.offsetWidth || 600, H = 155;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const months = [];
+  for (let i=5;i>=0;i--) { const d=new Date(window.curMonth); d.setMonth(d.getMonth()-i); months.push(d); }
+  const getSum = (m,type) => window.S.transactions.filter(t=>{
     const d=new Date(t.date); return d.getFullYear()===m.getFullYear()&&d.getMonth()===m.getMonth()&&t.type===type;
   }).reduce((s,t)=>s+t.amount,0);
   const inc=months.map(m=>getSum(m,'inc')), exp=months.map(m=>getSum(m,'exp'));
@@ -695,9 +590,9 @@ function renderChart(){
   });
 }
 
-function renderStats(){
+function renderStats() {
   const sc=document.getElementById('statsCards'), sg=document.getElementById('statsGrid');
-  if(!sc||!sg) return;
+  if (!sc||!sg) return;
   const t=monthTxns();
   const inc=t.filter(x=>x.type==='inc').reduce((s,x)=>s+x.amount,0);
   const exp=t.filter(x=>x.type==='exp').reduce((s,x)=>s+x.amount,0);
@@ -718,13 +613,13 @@ function renderStats(){
     <div class="panel">
       <div class="panel-head"><div class="panel-title">Gider Dağılımı</div></div>
       <div style="padding:14px 18px">
-        ${sorted.length?sorted.map(([id,amt])=>{
+        ${sorted.length ? sorted.map(([id,amt])=>{
           const c=cat(id),col=catCol(id),pct=exp>0?(amt/exp)*100:0;
           return `<div style="margin-bottom:11px">
             <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px"><span>${c.icon} ${c.name}</span><span style="color:var(--muted)">${pct.toFixed(1)}% · ${money(amt)}</span></div>
             <div class="bar"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div>
           </div>`;
-        }).join(''):`<div class="empty"><div class="empty-text">Veri yok</div></div>`}
+        }).join('') : `<div class="empty"><div class="empty-text">Veri yok</div></div>`}
       </div>
     </div>
     <div class="panel">
@@ -743,62 +638,66 @@ function renderStats(){
   `;
 }
 
-function renderCatManage(){
-  const el=document.getElementById('catManage'); if(!el) return;
-  el.innerHTML=window.S.categories.map(c=>`
+function renderCatManage() {
+  const el = document.getElementById('catManage'); if (!el) return;
+  el.innerHTML = window.S.categories.map(c=>`
     <div class="cat-chip">${c.icon} ${c.name} <span style="color:var(--muted);font-size:10px">${c.type==='exp'?'G':'+'}</span>
       <button onclick="deleteCat('${c.id}')">×</button>
     </div>
   `).join('');
 }
 
-function fillSelects(){
-  ['q_c','f_c'].forEach(id=>{
-    const sel=document.getElementById(id); if(!sel) return;
-    const type=id==='q_c'?window.qType:window.fType;
-    const prev=sel.value;
-    sel.innerHTML='<option value="">Seç...</option>'+
+function fillSelects() {
+  ['q_c','f_c'].forEach(id => {
+    const sel = document.getElementById(id); if (!sel) return;
+    const type = id==='q_c' ? window.qType : window.fType;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Seç...</option>' +
       window.S.categories.filter(c=>c.type===type).map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
-    if(prev) sel.value=prev;
+    if (prev) sel.value = prev;
   });
-  const bc=document.getElementById('b_c');
-  if(bc){ bc.innerHTML='<option value="">Seç...</option>'+window.S.categories.filter(c=>c.type==='exp').map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join(''); }
+  const bc = document.getElementById('b_c');
+  if (bc) {
+    bc.innerHTML = '<option value="">Seç...</option>' +
+      window.S.categories.filter(c=>c.type==='exp').map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+  }
 }
 
-// ── NAVIGATION ──
-window.showTab=(name,btn)=>{
+// ── NAV ──
+window.showTab = (name, btn) => {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   btn.classList.add('active');
   render();
 };
-window.changeMonth=(d)=>{ window.curMonth.setMonth(window.curMonth.getMonth()+d); render(); };
-window.setQType=(t)=>{
-  window.qType=t;
-  document.getElementById('qPillExp').className='type-pill'+(t==='exp'?' sel-exp':'');
-  document.getElementById('qPillInc').className='type-pill'+(t==='inc'?' sel-inc':'');
+window.changeMonth = (d) => { window.curMonth.setMonth(window.curMonth.getMonth()+d); render(); };
+window.setQType = (t) => {
+  window.qType = t;
+  document.getElementById('qPillExp').className = 'type-pill' + (t==='exp'?' sel-exp':'');
+  document.getElementById('qPillInc').className = 'type-pill' + (t==='inc'?' sel-inc':'');
   fillSelects();
 };
-window.setFType=(t)=>{
-  window.fType=t;
-  document.getElementById('fPillExp').className='type-pill'+(t==='exp'?' sel-exp':'');
-  document.getElementById('fPillInc').className='type-pill'+(t==='inc'?' sel-inc':'');
+window.setFType = (t) => {
+  window.fType = t;
+  document.getElementById('fPillExp').className = 'type-pill' + (t==='exp'?' sel-exp':'');
+  document.getElementById('fPillInc').className = 'type-pill' + (t==='inc'?' sel-inc':'');
   fillSelects();
 };
 
 // ── TOAST ──
-window.toast=(msg,type='')=>{
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.className='toast show'+(type?' '+type:'');
-  setTimeout(()=>el.classList.remove('show'),2600);
+window.toast = (msg, type='') => {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type?' '+type:'');
+  setTimeout(()=>el.classList.remove('show'), 2600);
 };
 
-// ── INIT DATE INPUTS ──
-const today=new Date().toISOString().split('T')[0];
-['q_d','f_d'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=today; });
+// ── DATE DEFAULTS ──
+const today = new Date().toISOString().split('T')[0];
+['q_d','f_d'].forEach(id => { const el=document.getElementById(id); if(el) el.value=today; });
 
-window.addEventListener('resize',()=>renderChart());
+window.addEventListener('resize', ()=>renderChart());
 </script>
 </body>
 </html>
