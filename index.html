@@ -163,6 +163,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
   <div class="tabs">
     <button class="tab active"  onclick="window.H.tab('piyasa',this)">🌍 Piyasa</button>
     <button class="tab" onclick="window.H.tab('ozet',this)">📊 Özet</button>
+    <button class="tab" onclick="window.H.tab('kasalar',this)">🏧 Kasalar</button>
     <button class="tab" onclick="window.H.tab('islemler',this)">💳 İşlemler</button>
     <button class="tab" onclick="window.H.tab('borclar',this)">💸 Borçlar</button>
     <button class="tab" onclick="window.H.tab('varliklar',this)">🏦 Varlıklar</button>
@@ -240,6 +241,63 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
     </div>
   </div>
 
+  <!-- KASALAR -->
+  <div id="tab-kasalar" class="page">
+    <div class="cards" id="kesaCards"></div>
+    <div class="cols">
+      <div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Hesaplarım</div></div>
+          <div id="hesapList"></div>
+        </div>
+        <div class="panel" style="margin-top:18px">
+          <div class="panel-head">
+            <div class="panel-title">↔️ Hesaplar Arası Transfer</div>
+          </div>
+          <div style="padding:16px 18px">
+            <div class="r3">
+              <div class="field"><label>Çıkan Hesap</label><select id="tr_from"></select></div>
+              <div class="field"><label>Giren Hesap</label><select id="tr_to"></select></div>
+              <div class="field"><label>Tutar ₺</label><input id="tr_amount" type="number" placeholder="0"></div>
+            </div>
+            <div class="r2" style="max-width:380px">
+              <div class="field"><label>Tarih</label><input id="tr_date" type="date"></div>
+              <div class="field"><label>Not</label><input id="tr_note" placeholder="İsteğe bağlı..."></div>
+            </div>
+            <button class="btn-add" onclick="window.H.addTransfer()">Transfer Yap</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="form-box">
+          <div class="form-title">Hesap Ekle</div>
+          <div class="field"><label>Hesap Adı</label><input id="acc_name" placeholder="Örn: Garanti Vadesiz"></div>
+          <div class="field"><label>Tür</label>
+            <select id="acc_type">
+              <option value="banka">🏦 Banka Hesabı</option>
+              <option value="nakit">💵 Nakit Cüzdan</option>
+              <option value="dijital">📱 Dijital Cüzdan</option>
+              <option value="kredi">💳 Kredi Kartı</option>
+              <option value="diger">📦 Diğer</option>
+            </select>
+          </div>
+          <div class="field"><label>Başlangıç Bakiyesi ₺</label><input id="acc_balance" type="number" placeholder="0"></div>
+          <div class="field"><label>Renk</label>
+            <select id="acc_color">
+              <option value="#1d3557">🔵 Lacivert</option>
+              <option value="#2d6a4f">🟢 Yeşil</option>
+              <option value="#b5830a">🟡 Altın</option>
+              <option value="#c1121f">🔴 Kırmızı</option>
+              <option value="#6d28d9">🟣 Mor</option>
+              <option value="#0d7377">🩵 Teal</option>
+            </select>
+          </div>
+          <button class="btn-add" onclick="window.H.addAccount()">Hesap Ekle</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ÖZET -->
   <div id="tab-ozet" class="page">
     <div style="background:white;border:1px solid var(--line);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
@@ -271,16 +329,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
             <div class="field"><label>Tarih</label><input id="q_d" type="date"></div>
           </div>
           <div class="field"><label>Kategori</label><select id="q_c"></select></div>
-          <div class="field"><label>Ödeme Yöntemi</label>
-            <select id="q_pay">
-              <option value="">Seç...</option>
-              <option value="nakit">💵 Nakit</option>
-              <option value="kredi">💳 Kredi Kartı</option>
-              <option value="banka">🏦 Banka Kartı / Havale</option>
-              <option value="dijital">📱 Dijital Cüzdan</option>
-              <option value="otomatik">🔄 Otomatik Ödeme</option>
-            </select>
-          </div>
+          <div class="field"><label>Hesap</label><select id="q_acc"><option value="">Hesap seç...</option></select></div>
           <button class="btn-add" onclick="window.H.addTxn('quick')">Ekle</button>
         </div>
         <div class="panel">
@@ -311,7 +360,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:9px;max-width:640px;align-items:flex-end">
         <div class="field" style="margin:0"><label>Not</label><input id="f_note" placeholder="İsteğe bağlı..."></div>
-        <div class="field" style="margin:0"><label>Ödeme Yöntemi</label><select id="f_pay" style="background:var(--paper)"><option value="">Seç...</option><option value="nakit">💵 Nakit</option><option value="kredi">💳 Kredi Kartı</option><option value="banka">🏦 Banka Kartı</option><option value="dijital">📱 Dijital Cüzdan</option><option value="otomatik">🔄 Otomatik</option></select></div>
+        <div class="field" style="margin:0"><label>Hesap</label><select id="f_acc"><option value="">Hesap seç...</option></select></div>
         <button class="btn-add" style="width:110px;margin:0" onclick="window.H.addTxn('full')">Ekle</button>
       </div>
     </div>
@@ -554,13 +603,14 @@ const DEFAULT_CATS = [
   {id:"tech",name:"Teknoloji",icon:"💻",type:"exp"},{id:"edu",name:"Eğitim",icon:"📚",type:"exp"},
   {id:"other_e",name:"Diğer",icon:"📌",type:"exp"},{id:"salary",name:"Maaş",icon:"💰",type:"inc"},
   {id:"freelance",name:"Freelance",icon:"🎯",type:"inc"},{id:"invest",name:"Yatırım",icon:"📈",type:"inc"},
-  {id:"other_i",name:"Diğer Gelir",icon:"✨",type:"inc"}
+  {id:"other_i",name:"Diğer Gelir",icon:"✨",type:"inc"},
+  {id:"transfer",name:"Transfer",icon:"↔️",type:"exp"}
 ];
 
 const S = {
   transactions:[], categories:[...DEFAULT_CATS], budgets:{},
   debts:[], installments:[], creditCards:[],
-  assets:[], goals:[], subscriptions:[], stocks:[]
+  assets:[], goals:[], subscriptions:[], stocks:[], accounts:[]
 };
 let curMonth = new Date(); curMonth.setDate(1);
 let qType = "exp", fType = "exp";
@@ -666,6 +716,7 @@ async function initData() {
   onSnapshot(P("assets"),        s=>{S.assets        =s.docs.map(d=>({id:d.id,...d.data()}));render();});
   onSnapshot(P("goals"),         s=>{S.goals         =s.docs.map(d=>({id:d.id,...d.data()}));render();});
   onSnapshot(P("subscriptions"), s=>{S.subscriptions =s.docs.map(d=>({id:d.id,...d.data()}));render();});
+  onSnapshot(P("accounts"), s=>{S.accounts=s.docs.map(d=>({id:d.id,...d.data()}));render();fillAccSelects();});
   onSnapshot(P("stocks"), s=>{
     S.stocks=s.docs.map(d=>({id:d.id,...d.data()}));
     render();
@@ -682,10 +733,76 @@ async function initData() {
 // ══════════════════════════════════════════
 // RENDER
 // ══════════════════════════════════════════
+
+function accBalance(acc) {
+  // Real balance = initial + all txns on this account
+  const txns = S.transactions.filter(t => t.accountId === acc.id);
+  const delta = txns.reduce((s,t) => t.type==="inc" ? s+t.amount : s-t.amount, 0);
+  return (acc.initialBalance||0) + delta;
+}
+
+function rKasalar() {
+  const kc=$("kesaCards"), hl=$("hesapList"); if(!kc||!hl) return;
+  const ACC_ICO={"banka":"🏦","nakit":"💵","dijital":"📱","kredi":"💳","diger":"📦"};
+  
+  const totalBal = S.accounts.reduce((s,a)=>s+accBalance(a),0);
+  kc.innerHTML=`
+    <div class="card c-teal"><div class="card-tag">🏧 Toplam Bakiye</div><div class="card-val" style="color:var(--teal)">${money(totalBal)}</div><div class="card-sub">${S.accounts.length} hesap</div></div>
+    ${S.accounts.slice(0,3).map(a=>{
+      const bal=accBalance(a);
+      return `<div class="card" style="border-top:3px solid ${a.color||"var(--blue)"}">
+        <div class="card-tag">${ACC_ICO[a.type]||"🏦"} ${a.name}</div>
+        <div class="card-val" style="color:${a.color||"var(--blue)"}">${money(bal)}</div>
+      </div>`;
+    }).join("")}`;
+
+  if(!S.accounts.length){
+    hl.innerHTML=`<div class="empty"><div class="empty-icon">🏧</div><div class="empty-text">Henüz hesap eklenmedi</div></div>`;
+    return;
+  }
+  hl.innerHTML=S.accounts.map(a=>{
+    const bal=accBalance(a);
+    const txnCount=S.transactions.filter(t=>t.accountId===a.id).length;
+    const today=new Date();
+    const monthTxns=S.transactions.filter(t=>{
+      if(t.accountId!==a.id) return false;
+      const d=new Date(t.date);
+      return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth();
+    });
+    const mInc=monthTxns.filter(t=>t.type==="inc").reduce((s,t)=>s+t.amount,0);
+    const mExp=monthTxns.filter(t=>t.type==="exp").reduce((s,t)=>s+t.amount,0);
+    return `<div class="g-row" style="border-left:3px solid ${a.color||"var(--blue)"}">
+      <div class="g-row-left">
+        <div class="g-row-title">${ACC_ICO[a.type]||"🏦"} ${a.name}</div>
+        <div class="g-row-sub">${a.type} · ${txnCount} işlem · Bu ay: <span style="color:var(--green)">+${money(mInc)}</span> / <span style="color:var(--red)">-${money(mExp)}</span></div>
+      </div>
+      <div class="g-row-right">
+        <div class="g-row-val" style="color:${bal>=0?"var(--teal)":"var(--red)"}">${money(bal)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:1px">Başlangıç: ${money(a.initialBalance||0)}</div>
+        <div style="display:flex;justify-content:flex-end;margin-top:4px;gap:5px">
+          <button class="del-btn" style="display:block" onclick="window.H.delDoc('accounts','${a.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function fillAccSelects(){
+  const opts = S.accounts.length
+    ? S.accounts.map(a=>`<option value="${a.id}">${{"banka":"🏦","nakit":"💵","dijital":"📱","kredi":"💳","diger":"📦"}[a.type]||"🏦"} ${a.name} (${money(accBalance(a))})</option>`).join("")
+    : "";
+  ["q_acc","f_acc","tr_from","tr_to"].forEach(id=>{
+    const sel=$(id); if(!sel) return;
+    const prev=sel.value;
+    sel.innerHTML=`<option value="">Hesap seç...</option>`+opts;
+    if(prev) sel.value=prev;
+  });
+}
+
 function render() {
   const lbl=curMonth.toLocaleString("tr-TR",{month:"long",year:"numeric"});
   const ml=$("monthLabel"); if(ml) ml.textContent=lbl;
-  rNetWorth(); rCards(); rRecent(); rCatTags();
+  rKasalar(); rNetWorth(); rCards(); rRecent(); rCatTags();
   rTxns(); rBudget(); rChart(); rStats();
   rDebts(); rInstallments(); rCreditCards();
   rAssets(); rGoals(); rSubs();
@@ -693,7 +810,8 @@ function render() {
 }
 
 function rNetWorth() {
-  const ta=S.assets.reduce((s,a)=>s+(assetDisplay(a).tl),0);
+  const accountTotal=S.accounts.reduce((s,a)=>s+accBalance(a),0);
+  const ta=S.assets.reduce((s,a)=>s+(assetDisplay(a).tl),0)+accountTotal;
   const td=S.debts.filter(d=>!d.paid).reduce((s,d)=>s+d.amount,0);
   const ti=S.installments.reduce((s,i)=>s+(i.monthly*i.remaining),0);
   const tc=S.creditCards.reduce((s,c)=>s+c.balance,0);
@@ -703,8 +821,13 @@ function rNetWorth() {
   const b=$("netWorthBreakdown");
   if(b) b.innerHTML=`
     <div style="text-align:center">
-      <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">Toplam Varlık</div>
-      <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:var(--green)">${money(ta)}</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">Hesaplar</div>
+      <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:var(--teal)">${money(accountTotal)}</div>
+    </div>
+    <div style="color:var(--line);font-size:20px;align-self:center">+</div>
+    <div style="text-align:center">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">Yatırım Varlıkları</div>
+      <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:var(--green)">${money(ta-accountTotal)}</div>
     </div>
     <div style="color:var(--line);font-size:20px;align-self:center">−</div>
     <div style="text-align:center">
@@ -728,12 +851,13 @@ function rCards() {
 
 function txnRow(t) {
   const c=getCat(t.category), col=gc(t.category);
-  const payBadge = t.payMethod
-    ? `<span style="font-size:10px;background:var(--paper2);border-radius:4px;padding:1px 5px;color:var(--muted);margin-left:4px">${PAY_ICO[t.payMethod]||""} ${PAY_LBL[t.payMethod]||t.payMethod}</span>`
-    : "";
+  const acc=S.accounts.find(a=>a.id===t.accountId);
+  const accBadge=acc
+    ?`<span style="font-size:10px;border-radius:4px;padding:1px 5px;margin-left:4px;background:${acc.color||"var(--blue)"}22;color:${acc.color||"var(--blue)"}">${{"banka":"🏦","nakit":"💵","dijital":"📱","kredi":"💳","diger":"📦"}[acc.type]||"🏦"} ${acc.name}</span>`
+    :"";
   return `<div class="txn">
     <div class="txn-ico" style="background:${col}20;color:${col}">${c.icon}</div>
-    <div><div class="txn-name">${t.name}${payBadge}</div><div class="txn-cat">${c.name}${t.note?" · "+t.note:""}</div></div>
+    <div><div class="txn-name">${t.name}${accBadge}</div><div class="txn-cat">${c.name}${t.note?" · "+t.note:""}</div></div>
     <div class="txn-date">${new Date(t.date).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})}</div>
     <div class="txn-amt ${t.type}">${t.type==="inc"?"+":"−"}${money(t.amount)}<button class="del-btn" onclick="window.H.delTxn('${t.id}')">✕</button></div>
   </div>`;
@@ -972,6 +1096,7 @@ function fillSelects(){
   });
   const bc=$("b_c");
   if(bc) bc.innerHTML="<option value=''>Seç...</option>"+S.categories.filter(c=>c.type==="exp").map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join("");
+  fillAccSelects();
 }
 
 // ══════════════════════════════════════════
@@ -1196,18 +1321,45 @@ window.H = {
 
   async addTxn(form){
     const p=form==="quick"
-      ?{n:"q_n",a:"q_a",d:"q_d",c:"q_c",note:null,pay:"q_pay",type:qType}
-      :{n:"f_n",a:"f_a",d:"f_d",c:"f_c",note:"f_note",pay:"f_pay",type:fType};
+      ?{n:"q_n",a:"q_a",d:"q_d",c:"q_c",note:null,acc:"q_acc",type:qType}
+      :{n:"f_n",a:"f_a",d:"f_d",c:"f_c",note:"f_note",acc:"f_acc",type:fType};
     const name=val(p.n).trim(), amount=num(p.a), date=val(p.d), cat=val(p.c);
     const note=p.note?val(p.note).trim():"";
-    const payMethod=val(p.pay)||"";
+    const accountId=val(p.acc)||"";
     if(!name||!amount||!date){toast("Açıklama, tutar ve tarih gerekli","err");return;}
-    await setDoc(D("transactions",uid2()),{name,amount,date,type:p.type,category:cat||"other_e",note,payMethod,createdAt:serverTimestamp()});
+    if(!accountId){toast("Lütfen bir hesap seç","err");return;}
+    await setDoc(D("transactions",uid2()),{name,amount,date,type:p.type,category:cat||"other_e",note,accountId,createdAt:serverTimestamp()});
     clr(p.n,p.a); if(p.note) clr(p.note);
     toast("Eklendi ✓","ok");
   },
 
   async delTxn(id){await deleteDoc(D("transactions",id));toast("Silindi");},
+
+  async addAccount(){
+    const name=val("acc_name").trim(), type=val("acc_type");
+    const initialBalance=num("acc_balance"), color=val("acc_color");
+    if(!name){toast("Hesap adı gerekli","err");return;}
+    await setDoc(D("accounts",uid2()),{name,type,initialBalance,color,createdAt:serverTimestamp()});
+    clr("acc_name","acc_balance");
+    toast("Hesap eklendi ✓","ok");
+  },
+
+  async addTransfer(){
+    const fromId=val("tr_from"), toId=val("tr_to");
+    const amount=num("tr_amount"), date=val("tr_date"), note=val("tr_note").trim();
+    if(!fromId||!toId){toast("İki hesap da seçilmeli","err");return;}
+    if(fromId===toId){toast("Aynı hesaba transfer olmaz","err");return;}
+    if(!amount){toast("Tutar gerekli","err");return;}
+    if(!date){toast("Tarih gerekli","err");return;}
+    const fromAcc=S.accounts.find(a=>a.id===fromId);
+    const toAcc=S.accounts.find(a=>a.id===toId);
+    const id=uid2();
+    // Two linked transactions
+    await setDoc(D("transactions",id+"_out"),{name:`Transfer → ${toAcc?.name||"Hesap"}`,amount,date,type:"exp",category:"transfer",note,accountId:fromId,transferId:id,createdAt:serverTimestamp()});
+    await setDoc(D("transactions",id+"_in"),{name:`Transfer ← ${fromAcc?.name||"Hesap"}`,amount,date,type:"inc",category:"transfer",note,accountId:toId,transferId:id,createdAt:serverTimestamp()});
+    clr("tr_amount","tr_note");
+    toast("Transfer yapıldı ✓","ok");
+  },
 
   async addDebt(){
     const name=val("d_name").trim(),amount=num("d_amount"),due=val("d_due"),note=val("d_note").trim();
