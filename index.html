@@ -977,6 +977,31 @@ function fillSelects(){
 // ══════════════════════════════════════════
 // MARKET DATA
 // ══════════════════════════════════════════
+// ── Shared Yahoo Finance fetcher with CORS proxy chain ──
+async function yahooFetch(sym, range="2d") {
+  const base = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=${range}`;
+  const urls = [
+    `https://corsproxy.io/?url=${encodeURIComponent(base)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(base)}`,
+    `https://thingproxy.freeboard.io/fetch/${base}`,
+    `https://api.codetabs.com/v1/proxy?quest=${base}`,
+  ];
+  for (const url of urls) {
+    try {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 7000);
+      const r    = await fetch(url, { signal: ctrl.signal });
+      clearTimeout(tid);
+      if (!r.ok) continue;
+      const d = await r.json();
+      const q = d?.chart?.result?.[0];
+      if (!q?.meta?.regularMarketPrice) continue;
+      return q.meta; // success
+    } catch(e) { /* try next */ }
+  }
+  return null;
+}
+
 const MKT = {
   data:{},
   lastUpdate:null,
@@ -1013,27 +1038,12 @@ const MKT = {
   },
 
   async fetchBIST(){
-    const symbols=["XU100.IS","XU030.IS"];
-    const PROXIES=[
-      sym=>`https://corsproxy.io/?https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`,
-      sym=>`https://api.allorigins.win/raw?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/"+sym+"?interval=1d&range=2d")}`,
-      sym=>`https://query2.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`,
-    ];
-    async function fetchOne(sym){
-      for(const proxy of PROXIES){
-        try{
-          const r=await fetch(proxy(sym),{signal:AbortSignal.timeout(6000)});
-          if(!r.ok) continue;
-          const d=await r.json();
-          const q=d?.chart?.result?.[0];
-          if(!q||!q.meta.regularMarketPrice) continue;
-          const meta=q.meta;
-          return{sym,price:meta.regularMarketPrice,prev:meta.chartPreviousClose,name:sym==="XU100.IS"?"BIST 100":"BIST 30"};
-        }catch(e){continue;}
-      }
-      return null;
-    }
-    const results=await Promise.allSettled(symbols.map(s=>fetchOne(s)));
+    const symbols=[{sym:"XU100.IS",name:"BIST 100"},{sym:"XU030.IS",name:"BIST 30"}];
+    const results = await Promise.allSettled(symbols.map(async ({sym,name}) => {
+      const meta = await yahooFetch(sym,"2d");
+      if(!meta) return null;
+      return {sym, name, price:meta.regularMarketPrice, prev:meta.chartPreviousClose};
+    }));
     MKT.data.indices=results.filter(r=>r.status==="fulfilled"&&r.value).map(r=>r.value);
   },
 
@@ -1336,31 +1346,11 @@ window.H = {
     }
     el.innerHTML=`<div class="mkt-loading">Veriler çekiliyor...</div>`;
 
-    // CORS proxy fallback listesi
-    const PROXIES=[
-      sym=>`https://corsproxy.io/?https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`,
-      sym=>`https://api.allorigins.win/raw?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/"+sym+"?interval=1d&range=5d")}`,
-      sym=>`https://query2.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`,
-    ];
-
-    async function fetchStock(s){
-      for(const proxy of PROXIES){
-        try{
-          const url=proxy(s.sym);
-          const r=await fetch(url,{signal:AbortSignal.timeout(6000)});
-          if(!r.ok) continue;
-          const d=await r.json();
-          const q=d?.chart?.result?.[0];
-          if(!q) continue;
-          const meta=q.meta;
-          if(!meta.regularMarketPrice) continue;
-          return{...s,price:meta.regularMarketPrice,prev:meta.chartPreviousClose,name:meta.shortName||s.sym};
-        }catch(e){continue;}
-      }
-      return{...s,price:null,err:true};
-    }
-
-    const results=await Promise.allSettled(S.stocks.map(s=>fetchStock(s)));
+    const results=await Promise.allSettled(S.stocks.map(async s=>{
+      const meta=await yahooFetch(s.sym,"5d");
+      if(!meta) return{...s,price:null,err:true};
+      return{...s,price:meta.regularMarketPrice,prev:meta.chartPreviousClose,name:meta.shortName||s.sym};
+    }));
     const stocks=results.map(r=>r.status==="fulfilled"?r.value:{...r,price:null,err:true});
     const upd=$("stocksLastUpd");
     if(upd) upd.textContent="Güncellendi: "+new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
