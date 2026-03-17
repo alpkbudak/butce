@@ -81,7 +81,6 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 .type-pill{padding:5px 14px;border-radius:20px;border:1.5px solid var(--line);background:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;color:var(--muted)}
 .type-pill.sel-exp{background:var(--red-bg);border-color:var(--red);color:var(--red)}
 .type-pill.sel-inc{background:var(--green-bg);border-color:var(--green);color:var(--green)}
-.type-pill.sel-conv{background:#fff7ed;border-color:#ea580c;color:#ea580c}
 .field{margin-bottom:9px}
 .field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:3px}
 .field input,.field select{width:100%;padding:8px 11px;border:1.5px solid var(--line);border-radius:7px;background:var(--paper);color:var(--ink);font-size:13px;font-family:inherit;transition:border .15s;-webkit-appearance:none}
@@ -337,7 +336,6 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
           <div class="type-pills">
             <button class="type-pill sel-exp" id="qPillExp" onclick="window.H.setQType('exp')">− Gider</button>
             <button class="type-pill" id="qPillInc" onclick="window.H.setQType('inc')">+ Gelir</button>
-            <button class="type-pill" id="qPillConv" onclick="window.H.setQType('conv')">⇄ Dönüşüm</button>
           </div>
           <!-- Normal form (gelir/gider) -->
           <div id="q_normal_fields">
@@ -403,7 +401,6 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
       <div class="type-pills">
         <button class="type-pill sel-exp" id="fPillExp" onclick="window.H.setFType('exp')">− Gider</button>
         <button class="type-pill" id="fPillInc" onclick="window.H.setFType('inc')">+ Gelir</button>
-        <button class="type-pill" id="fPillConv" onclick="window.H.setFType('conv')">⇄ Dönüşüm</button>
       </div>
       <div class="r4">
         <div class="field"><label>Açıklama</label><input id="f_n" placeholder="Açıklama..."></div>
@@ -669,8 +666,7 @@ const DEFAULT_CATS = [
   {id:"other_e",name:"Diğer",icon:"📌",type:"exp"},{id:"salary",name:"Maaş",icon:"💰",type:"inc"},
   {id:"freelance",name:"Freelance",icon:"🎯",type:"inc"},{id:"invest",name:"Yatırım",icon:"📈",type:"inc"},
   {id:"other_i",name:"Diğer Gelir",icon:"✨",type:"inc"},
-  {id:"transfer",name:"Transfer",icon:"↔️",type:"exp"},
-  {id:"conversion",name:"Dönüşüm",icon:"⇄",type:"exp"}
+  {id:"transfer",name:"Transfer",icon:"↔️",type:"exp"}
 ];
 
 const S = {
@@ -858,7 +854,7 @@ function fillAccSelects(){
   const opts = S.accounts.length
     ? S.accounts.map(a=>`<option value="${a.id}">${{"banka":"🏦","nakit":"💵","dijital":"📱","kredi":"💳","diger":"📦"}[a.type]||"🏦"} ${a.name} (${money(accBalance(a))})</option>`).join("")
     : "";
-  ["q_acc","f_acc","tr_from","tr_to","qc_from_acc","qc_to_acc"].forEach(id=>{
+  ["q_acc","f_acc","tr_from","tr_to"].forEach(id=>{
     const sel=$(id); if(!sel) return;
     const prev=sel.value;
     sel.innerHTML=`<option value="">Hesap seç...</option>`+opts;
@@ -1485,28 +1481,11 @@ window.H = {
     render();
   },
   changeMonth(d){curMonth.setMonth(curMonth.getMonth()+d);render();},
-  setQType(t){
-    qType=t;
-    $("qPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");
-    $("qPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");
-    $("qPillConv").className="type-pill"+(t==="conv"?" sel-conv":"");
-    $("q_normal_fields").style.display=t==="conv"?"none":"block";
-    $("q_conv_fields").style.display=t==="conv"?"block":"none";
-    if(t==="conv") window.H.updateConvRate();
-    fillSelects();
-  },
-  setFType(t){
-    fType=t;
-    $("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");
-    $("fPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");
-    $("fPillConv").className="type-pill"+(t==="conv"?" sel-conv":"");
-    fillSelects();
-  },
+  setQType(t){qType=t;$("qPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");$("qPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");fillSelects();},
+  setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");$("fPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");fillSelects();},
   renderTxns:rTxns,
 
   async addTxn(form){
-    const currentType = form==="quick" ? qType : fType;
-    if(currentType==="conv"){ await window.H.addConversion(form); return; }
     const p=form==="quick"
       ?{n:"q_n",a:"q_a",d:"q_d",c:"q_c",note:null,acc:"q_acc",type:qType}
       :{n:"f_n",a:"f_a",d:"f_d",c:"f_c",note:"f_note",acc:"f_acc",type:fType};
@@ -1522,88 +1501,6 @@ window.H = {
 
   async delTxn(id){await deleteDoc(D("transactions",id));toast("Silindi");},
 
-  updateConvRate(){
-    const unit=val("qc_to_unit");
-    const d=MKT.data;
-    const rates={USD:d.usdtry,EUR:d.eurtry,GBP:d.gbptry,GRAM_ALTIN:d.gramAltin,ONS_ALTIN:d.xautry,BTC:d.crypto?.bitcoin?.try,ETH:d.crypto?.ethereum?.try};
-    const rate=rates[unit];
-    const el=$("qc_rate_info");
-    if(el){
-      if(rate) el.textContent=`Güncel kur: 1 ${unit} ≈ ${(+rate).toLocaleString("tr-TR",{maximumFractionDigits:2})} ₺`;
-      else if(unit==="TL") el.textContent="";
-      else el.textContent="Kur verisi bekleniyor...";
-    }
-    // Auto-fill TL amount if to_amount is set
-    const toAmt=num("qc_to_amount");
-    if(toAmt&&rate&&!num("qc_from_amount")){
-      $("qc_from_amount").value=Math.round(toAmt*rate);
-    }
-  },
-
-  async addConversion(){
-    const note=val("qc_note").trim()||"Dönüşüm";
-    const date=val("qc_date");
-    const fromAccId=val("qc_from_acc");
-    const fromAmount=num("qc_from_amount");
-    const toAmount=num("qc_to_amount");
-    const toUnit=val("qc_to_unit");
-    const toAccId=val("qc_to_acc");
-    if(!fromAccId){toast("Çıkan hesabı seç","err");return;}
-    if(!fromAmount||!toAmount){toast("Tutarları gir","err");return;}
-    if(!date){toast("Tarih gerekli","err");return;}
-    const fromAcc=S.accounts.find(a=>a.id===fromAccId);
-    const toAcc=S.accounts.find(a=>a.id===toAccId);
-    const id=uid2();
-    // 1. Çıkan kasadan gider
-    await setDoc(D("transactions",id+"_out"),{
-      name:`${note} (Çıkan)`,
-      amount:fromAmount, date, type:"exp",
-      category:"conversion", note:`→ ${toAmount} ${toUnit}`,
-      accountId:fromAccId, convId:id,
-      createdAt:serverTimestamp()
-    });
-    // 2. Eğer hedef kasa seçildiyse oraya gelir
-    if(toAccId){
-      // Hedef kasa TL kasasıysa fromAmount ile, değilse toAmount ile
-      const incomeTL = toUnit==="TL" ? toAmount : fromAmount;
-      await setDoc(D("transactions",id+"_in"),{
-        name:`${note} (Giren)`,
-        amount:incomeTL, date, type:"inc",
-        category:"conversion", note:`← ${toAmount} ${toUnit}`,
-        accountId:toAccId, convId:id,
-        createdAt:serverTimestamp()
-      });
-    }
-    // 3. Varlık olarak kaydet (USD, EUR, altın vs.)
-    if(toUnit!=="TL"){
-      const existingAsset=S.assets.find(a=>a.name===toUnit||(a.unit===toUnit&&a.type==="doviz")||
-        (toUnit.includes("ALTIN")&&a.type==="altin")||
-        (toUnit==="BTC"&&a.type==="kripto"&&a.unit==="BTC")||
-        (toUnit==="ETH"&&a.type==="kripto"&&a.unit==="ETH"));
-      const typeMap={USD:"doviz",EUR:"doviz",GBP:"doviz",CHF:"doviz",GRAM_ALTIN:"altin",ONS_ALTIN:"altin",BTC:"kripto",ETH:"kripto"};
-      const unitMap={GRAM_ALTIN:"gram",ONS_ALTIN:"ons"};
-      const assetType=typeMap[toUnit]||"diger";
-      const assetUnit=unitMap[toUnit]||toUnit;
-      const d=MKT.data;
-      const rates={USD:d.usdtry,EUR:d.eurtry,GBP:d.gbptry,GRAM_ALTIN:d.gramAltin,ONS_ALTIN:d.xautry,BTC:d.crypto?.bitcoin?.try,ETH:d.crypto?.ethereum?.try};
-      const tlVal=rates[toUnit]?toAmount*rates[toUnit]:fromAmount;
-      if(existingAsset){
-        // Mevcut varlığa ekle
-        const newQty=(existingAsset.qty||0)+toAmount;
-        const newTL=existingAsset.amount+tlVal;
-        await setDoc(D("assets",existingAsset.id),{...existingAsset,qty:newQty,amount:newTL});
-      } else {
-        // Yeni varlık oluştur
-        await setDoc(D("assets",id+"_asset"),{
-          name:toUnit, type:assetType, unit:assetUnit,
-          qty:toAmount, amount:tlVal, costTL:fromAmount,
-          note:note, createdAt:serverTimestamp()
-        });
-      }
-    }
-    clr("qc_note","qc_from_amount","qc_to_amount");
-    toast("Dönüşüm kaydedildi ✓","ok");
-  },
 
   async addAccount(){
     const name=val("acc_name").trim(), type=val("acc_type");
@@ -1846,18 +1743,7 @@ window.H = {
 
 // Init
 const today2=new Date().toISOString().split("T")[0];
-["q_d","f_d","qc_date"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
-// Dönüşüm kur güncelle
-const qcUnit=$("qc_to_unit");
-if(qcUnit) qcUnit.onchange=()=>window.H.updateConvRate();
-const qcToAmt=$("qc_to_amount");
-if(qcToAmt) qcToAmt.oninput=()=>{
-  const unit=val("qc_to_unit");
-  const d=MKT.data;
-  const rates={USD:d.usdtry,EUR:d.eurtry,GBP:d.gbptry,GRAM_ALTIN:d.gramAltin,ONS_ALTIN:d.xautry,BTC:d.crypto?.bitcoin?.try,ETH:d.crypto?.ethereum?.try};
-  const rate=rates[unit];
-  if(rate){ $("qc_from_amount").value=Math.round(num("qc_to_amount")*rate); }
-};
+["q_d","f_d"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
 window.addEventListener("resize",()=>rChart());
 initData();
 </script>
