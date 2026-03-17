@@ -571,6 +571,54 @@ const num = id => parseFloat($(id)?.value) || 0;
 const int = id => parseInt($(id)?.value) || 0;
 const clr = (...ids) => ids.forEach(id => { const el=$(id); if(el) el.value=""; });
 const money = n => (+n||0).toLocaleString("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2})+" ₺";
+const moneyUSD = n => "$"+(+n||0).toLocaleString("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const moneyEUR = n => "€"+(+n||0).toLocaleString("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const moneyGBP = n => "£"+(+n||0).toLocaleString("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+// Format asset in its native currency + show TL equivalent in sub
+function assetDisplay(a) {
+  const d = MKT.data;
+  const type = a.type, unit = a.unit;
+  // Crypto → USD
+  if (type === "kripto") {
+    const prices = {BTC: d.crypto?.bitcoin, ETH: d.crypto?.ethereum, SOL: d.crypto?.solana};
+    const pItem = prices[unit] || d.crypto?.bitcoin;
+    if (a.qty && pItem?.usd) {
+      const usdVal = a.qty * pItem.usd;
+      const tlVal  = a.qty * pItem.try;
+      return { main: moneyUSD(usdVal), sub: money(tlVal)+" (≈TL)", tl: tlVal };
+    }
+    return { main: moneyUSD(a.amount / (d.usdtry||1)), sub: money(a.amount), tl: a.amount };
+  }
+  // Altın gram → TL, ons → USD
+  if (type === "altin") {
+    if (unit === "ons" && a.qty) {
+      const usdVal = d.xautry ? a.qty * (d.xautry / (d.usdtry||1)) : null;
+      const tlVal  = d.gramAltin ? a.qty * 31.1035 * d.gramAltin : a.amount;
+      return { main: usdVal ? moneyUSD(usdVal) : money(a.amount), sub: money(tlVal)+" (≈TL)", tl: tlVal };
+    }
+    // gram → TL
+    if (unit === "gram" && a.qty && d.gramAltin) {
+      const tlVal = a.qty * d.gramAltin;
+      return { main: money(tlVal), sub: a.qty+" gr", tl: tlVal };
+    }
+    return { main: money(a.amount), sub: "", tl: a.amount };
+  }
+  // Döviz → native currency
+  if (type === "doviz") {
+    const rates = { USD: d.usdtry, EUR: d.eurtry, GBP: d.gbptry };
+    const fmts  = { USD: moneyUSD, EUR: moneyEUR, GBP: moneyGBP };
+    const rate  = rates[unit] || 1;
+    const fmt   = fmts[unit] || money;
+    if (a.qty && rate) {
+      const tlVal = a.qty * rate;
+      return { main: fmt(a.qty), sub: money(tlVal)+" (≈TL)", tl: tlVal };
+    }
+    return { main: money(a.amount), sub: "", tl: a.amount };
+  }
+  // TL varlıklar (nakit, birikim, hisse, gayrimenkul, diger)
+  return { main: money(a.amount), sub: "", tl: a.amount };
+}
 const uid2  = () => Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const getCat = id => S.categories.find(c=>c.id===id) || {name:id,icon:"📌",type:"exp"};
 const CAT_COLORS = {food:"#fb923c",market:"#facc15",trans:"#60a5fa",bills:"#a78bfa",rent:"#f472b6",
@@ -645,7 +693,7 @@ function render() {
 }
 
 function rNetWorth() {
-  const ta=S.assets.reduce((s,a)=>s+a.amount,0);
+  const ta=S.assets.reduce((s,a)=>s+(assetDisplay(a).tl),0);
   const td=S.debts.filter(d=>!d.paid).reduce((s,d)=>s+d.amount,0);
   const ti=S.installments.reduce((s,i)=>s+(i.monthly*i.remaining),0);
   const tc=S.creditCards.reduce((s,c)=>s+c.balance,0);
@@ -823,19 +871,25 @@ function rCreditCards(){
 
 function rAssets(){
   const ac=$("assetCards"),al=$("assetList");if(!ac||!al)return;
-  const total=S.assets.reduce((s,a)=>s+a.amount,0);
-  const bt={};S.assets.forEach(a=>{bt[a.type]=(bt[a.type]||0)+a.amount;});
+  const total=S.assets.reduce((s,a)=>s+(assetDisplay(a).tl),0);
+  const bt={};S.assets.forEach(a=>{bt[a.type]=(bt[a.type]||0)+(assetDisplay(a).tl);});
   const topTypes=Object.entries(bt).sort((a,b)=>b[1]-a[1]).slice(0,3);
-  ac.innerHTML=`<div class="card c-teal"><div class="card-tag">🏦 Toplam Varlık</div><div class="card-val" style="color:var(--teal)">${money(total)}</div><div class="card-sub">${S.assets.length} kalem</div></div>${topTypes.map(([t,a])=>`<div class="card"><div class="card-tag">${AI[t]||"📦"} ${t}</div><div class="card-val" style="color:var(--teal)">${money(a)}</div></div>`).join("")}`;
+  ac.innerHTML=`<div class="card c-teal"><div class="card-tag">🏦 Toplam Varlık (TL)</div><div class="card-val" style="color:var(--teal)">${money(total)}</div><div class="card-sub">${S.assets.length} kalem</div></div>${topTypes.map(([t,a])=>`<div class="card"><div class="card-tag">${AI[t]||"📦"} ${t}</div><div class="card-val" style="color:var(--teal)">${money(a)}</div></div>`).join("")}`;
   al.innerHTML=S.assets.length?S.assets.map(a=>{
-    const unitStr=a.qty?`${a.qty} ${a.unit||""} · `:"";
+    const disp=assetDisplay(a);
     const costStr=a.costTL?` · Alış: ${money(a.costTL)}`:"";
-    const gainStr=(a.costTL&&a.amount&&a.costTL>0)?((a.amount-a.costTL)/a.costTL*100).toFixed(1):"";
-    const gainBadge=gainStr?`<span style="font-size:11px;font-weight:600;color:${+gainStr>=0?"var(--green)":"var(--red)"}">${+gainStr>=0?"▲":"▼"}%${Math.abs(+gainStr)}</span>`:"";
+    const gainStr=(a.costTL&&disp.tl&&a.costTL>0)?((disp.tl-a.costTL)/a.costTL*100).toFixed(1):"";
+    const gainBadge=gainStr?`<span style="font-size:11px;font-weight:600;color:${+gainStr>=0?"var(--green)":"var(--red)"}">${+gainStr>=0?"▲":"▼"} %${Math.abs(+gainStr)}</span>`:"";
     return `<div class="g-row">
-      <div class="g-row-left"><div class="g-row-title">${AI[a.type]||"📦"} ${a.name}</div><div class="g-row-sub">${unitStr}${a.type}${a.note?" · "+a.note:""}${costStr}</div></div>
+      <div class="g-row-left">
+        <div class="g-row-title">${AI[a.type]||"📦"} ${a.name}</div>
+        <div class="g-row-sub">${a.type}${a.note?" · "+a.note:""}${costStr}</div>
+      </div>
       <div class="g-row-right">
-        <div class="g-row-val" style="color:var(--teal);display:flex;align-items:center;gap:6px">${money(a.amount)} ${gainBadge}</div>
+        <div class="g-row-val" style="color:var(--teal);display:flex;align-items:center;gap:6px">
+          ${disp.main} ${gainBadge}
+        </div>
+        ${disp.sub?`<div style="font-size:11px;color:var(--muted);margin-top:1px">${disp.sub}</div>`:""}
         <div style="display:flex;justify-content:flex-end;margin-top:4px;gap:5px">
           <button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.editAsset('${a.id}')">Güncelle</button>
           <button class="del-btn" style="display:block" onclick="window.H.delDoc('assets','${a.id}')">✕</button>
@@ -960,16 +1014,26 @@ const MKT = {
 
   async fetchBIST(){
     const symbols=["XU100.IS","XU030.IS"];
-    const results=await Promise.allSettled(symbols.map(sym=>
-      fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`)
-        .then(r=>r.json())
-        .then(d=>{
+    const PROXIES=[
+      sym=>`https://corsproxy.io/?https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`,
+      sym=>`https://api.allorigins.win/raw?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/"+sym+"?interval=1d&range=2d")}`,
+      sym=>`https://query2.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`,
+    ];
+    async function fetchOne(sym){
+      for(const proxy of PROXIES){
+        try{
+          const r=await fetch(proxy(sym),{signal:AbortSignal.timeout(6000)});
+          if(!r.ok) continue;
+          const d=await r.json();
           const q=d?.chart?.result?.[0];
-          if(!q) return null;
+          if(!q||!q.meta.regularMarketPrice) continue;
           const meta=q.meta;
           return{sym,price:meta.regularMarketPrice,prev:meta.chartPreviousClose,name:sym==="XU100.IS"?"BIST 100":"BIST 30"};
-        })
-    ));
+        }catch(e){continue;}
+      }
+      return null;
+    }
+    const results=await Promise.allSettled(symbols.map(s=>fetchOne(s)));
     MKT.data.indices=results.filter(r=>r.status==="fulfilled"&&r.value).map(r=>r.value);
   },
 
@@ -1055,9 +1119,21 @@ const MKT = {
     if(pe){
       if(!S.assets.length){pe.innerHTML=`<div class="mkt-loading">Varlıklar sekmesinden ekle</div>`;}
       else{
-        let rows=S.assets.map(a=>`<div class="mkt-row"><div class="mkt-left"><div class="mkt-ico" style="background:#ccfbf1">${AI[a.type]||"📦"}</div><div><div class="mkt-sym">${a.name}</div><div class="mkt-name">${a.type}</div></div></div><div class="mkt-right"><div class="mkt-price">${f(a.amount)} <span style="font-size:11px;color:var(--muted)">₺</span></div></div></div>`).join("");
-        const total=S.assets.reduce((s,a)=>s+a.amount,0);
-        rows+=`<div style="padding:10px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Toplam</span><span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:var(--teal)">${f(total)} ₺</span></div>`;
+        let rows=S.assets.map(a=>{
+          const disp=assetDisplay(a);
+          return `<div class="mkt-row">
+            <div class="mkt-left">
+              <div class="mkt-ico" style="background:#ccfbf1">${AI[a.type]||"📦"}</div>
+              <div><div class="mkt-sym">${a.name}</div><div class="mkt-name">${a.type}</div></div>
+            </div>
+            <div class="mkt-right">
+              <div class="mkt-price">${disp.main}</div>
+              ${disp.sub?`<div style="font-size:11px;color:var(--muted)">${disp.sub}</div>`:""}
+            </div>
+          </div>`;
+        }).join("");
+        const total=S.assets.reduce((s,a)=>s+(assetDisplay(a).tl),0);
+        rows+=`<div style="padding:10px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Toplam (TL)</span><span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:var(--teal)">${f(total)} ₺</span></div>`;
         pe.innerHTML=rows;
       }
       const upd=$("mktLastUpd");
@@ -1259,17 +1335,32 @@ window.H = {
       return;
     }
     el.innerHTML=`<div class="mkt-loading">Veriler çekiliyor...</div>`;
-    const results=await Promise.allSettled(S.stocks.map(s=>
-      fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${s.sym}?interval=1d&range=5d`)
-        .then(r=>r.json())
-        .then(d=>{
+
+    // CORS proxy fallback listesi
+    const PROXIES=[
+      sym=>`https://corsproxy.io/?https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`,
+      sym=>`https://api.allorigins.win/raw?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/"+sym+"?interval=1d&range=5d")}`,
+      sym=>`https://query2.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`,
+    ];
+
+    async function fetchStock(s){
+      for(const proxy of PROXIES){
+        try{
+          const url=proxy(s.sym);
+          const r=await fetch(url,{signal:AbortSignal.timeout(6000)});
+          if(!r.ok) continue;
+          const d=await r.json();
           const q=d?.chart?.result?.[0];
-          if(!q) return{...s,price:null,err:true};
+          if(!q) continue;
           const meta=q.meta;
+          if(!meta.regularMarketPrice) continue;
           return{...s,price:meta.regularMarketPrice,prev:meta.chartPreviousClose,name:meta.shortName||s.sym};
-        })
-        .catch(()=>({...s,price:null,err:true}))
-    ));
+        }catch(e){continue;}
+      }
+      return{...s,price:null,err:true};
+    }
+
+    const results=await Promise.allSettled(S.stocks.map(s=>fetchStock(s)));
     const stocks=results.map(r=>r.status==="fulfilled"?r.value:{...r,price:null,err:true});
     const upd=$("stocksLastUpd");
     if(upd) upd.textContent="Güncellendi: "+new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
