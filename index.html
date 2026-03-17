@@ -1285,7 +1285,7 @@ const MKT = {
         // Duplicate for seamless loop
         const html = [...items, ...items].map(i => {
           const chgStr = i.chg != null
-            ? `<span class="t-chg ${i.chg>=0?"t-up":"t-dn}">${i.chg>=0?"▲":"▼"} ${Math.abs(i.chg).toFixed(2)}%</span>`
+            ? `<span class="t-chg ${i.chg>=0?"t-up":"t-dn"}>${i.chg>=0?"▲":"▼"} ${Math.abs(i.chg).toFixed(2)}%</span>`
             : "";
           return `<span class="ticker-item"><span class="t-sym">${i.sym}</span> ${i.val} ${chgStr}</span>`;
         }).join("");
