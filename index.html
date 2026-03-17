@@ -145,6 +145,20 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 .mkt-chg{font-size:11.5px;font-weight:600;margin-top:1px}
 .chg-up{color:var(--green)}.chg-dn{color:var(--red)}
 .mkt-loading{padding:24px;text-align:center;color:var(--muted);font-size:13px}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,26,46,.55);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:white;border-radius:14px;padding:28px;width:480px;max-width:95vw;box-shadow:var(--shadow-lg);transform:translateY(16px);transition:transform .2s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:0 4px;line-height:1}
+.modal-close:hover{color:var(--ink)}
+.modal-footer{display:flex;gap:10px;margin-top:20px}
+.modal-footer .btn-add{margin:0}
+.btn-danger{padding:10px 20px;background:var(--red-bg);color:var(--red);border:1.5px solid var(--red);border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Bricolage Grotesque',sans-serif;transition:all .15s}
+.btn-danger:hover{background:var(--red);color:white}
 </style>
 </head>
 <body>
@@ -572,6 +586,18 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
   </div>
 </div>
 
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal" onclick="if(event.target===this)window.H.closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">Düzenle</div>
+      <button class="modal-close" onclick="window.H.closeModal()">×</button>
+    </div>
+    <div id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
 <div id="toast"></div>
 
 
@@ -780,7 +806,8 @@ function rKasalar() {
         <div class="g-row-val" style="color:${bal>=0?"var(--teal)":"var(--red)"}">${money(bal)}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:1px">Başlangıç: ${money(a.initialBalance||0)}</div>
         <div style="display:flex;justify-content:flex-end;margin-top:4px;gap:5px">
-          <button class="del-btn" style="display:block" onclick="window.H.delDoc('accounts','${a.id}')">✕</button>
+          <button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.editAccount('${a.id}')">Düzenle</button>
+          <button class="btn-sm danger" style="padding:2px 8px;font-size:11px" onclick="window.H.deleteAccount('${a.id}')">Sil</button>
         </div>
       </div>
     </div>`;
@@ -859,7 +886,7 @@ function txnRow(t) {
     <div class="txn-ico" style="background:${col}20;color:${col}">${c.icon}</div>
     <div><div class="txn-name">${t.name}${accBadge}</div><div class="txn-cat">${c.name}${t.note?" · "+t.note:""}</div></div>
     <div class="txn-date">${new Date(t.date).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})}</div>
-    <div class="txn-amt ${t.type}">${t.type==="inc"?"+":"−"}${money(t.amount)}<button class="del-btn" onclick="window.H.delTxn('${t.id}')">✕</button></div>
+    <div class="txn-amt ${t.type}">${t.type==="inc"?"+":"−"}${money(t.amount)}<button class="del-btn" style="font-size:11px;color:var(--muted)" onclick="window.H.editTxn('${t.id}')">✎</button><button class="del-btn" onclick="window.H.delTxn('${t.id}')">✕</button></div>
   </div>`;
 }
 function rRecent(){const el=$("recentList");if(!el)return;const l=monthTxns().slice(0,6);el.innerHTML=l.length?l.map(txnRow).join(""):`<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Bu ay işlem yok</div></div>`;}
@@ -1307,6 +1334,96 @@ setInterval(()=>MKT.fetch(),60000);
 // WINDOW.H — all public actions
 // ══════════════════════════════════════════
 window.H = {
+  // ── MODAL ──
+  openModal(title, bodyHtml, footerHtml){
+    $("modalTitle").textContent=title;
+    $("modalBody").innerHTML=bodyHtml;
+    $("modalFooter").innerHTML=footerHtml;
+    $("editModal").classList.add("open");
+  },
+  closeModal(){
+    $("editModal").classList.remove("open");
+  },
+
+  // ── İŞLEM DÜZENLE ──
+  editTxn(id){
+    const t=S.transactions.find(x=>x.id===id); if(!t) return;
+    const catOpts=S.categories.filter(x=>x.type===t.type).map(x=>`<option value="${x.id}" ${x.id===t.category?"selected":""}>${x.icon} ${x.name}</option>`).join("");
+    const accOpts=S.accounts.map(a=>`<option value="${a.id}" ${a.id===t.accountId?"selected":""}>${{"banka":"🏦","nakit":"💵","dijital":"📱","kredi":"💳","diger":"📦"}[a.type]||"🏦"} ${a.name}</option>`).join("");
+    window.H.openModal("İşlemi Düzenle", `
+      <div class="field"><label>Açıklama</label><input id="et_name" value="${t.name}"></div>
+      <div class="r2">
+        <div class="field"><label>Tutar ₺</label><input id="et_amount" type="number" value="${t.amount}"></div>
+        <div class="field"><label>Tarih</label><input id="et_date" type="date" value="${t.date}"></div>
+      </div>
+      <div class="field"><label>Kategori</label><select id="et_cat">${catOpts}</select></div>
+      <div class="field"><label>Hesap</label><select id="et_acc"><option value="">Hesap seç...</option>${accOpts}</select></div>
+      <div class="field"><label>Not</label><input id="et_note" value="${t.note||""}"></div>
+    `,`
+      <button class="btn-add" style="flex:1" onclick="window.H.saveTxn('${id}')">Kaydet</button>
+      <button class="btn-danger" onclick="window.H.delTxn('${id}');window.H.closeModal()">Sil</button>
+    `);
+  },
+  async saveTxn(id){
+    const t=S.transactions.find(x=>x.id===id); if(!t) return;
+    const name=val("et_name").trim(), amount=num("et_amount"), date=val("et_date");
+    const cat=val("et_cat"), accId=val("et_acc"), note=val("et_note").trim();
+    if(!name||!amount||!date){toast("Boş alan bırakma","err");return;}
+    await setDoc(D("transactions",id),{...t,name,amount,date,category:cat||t.category,accountId:accId||t.accountId,note});
+    window.H.closeModal();
+    toast("Güncellendi ✓","ok");
+  },
+
+  // ── HESAP DÜZENLE ──
+  editAccount(id){
+    const a=S.accounts.find(x=>x.id===id); if(!a) return;
+    window.H.openModal("Hesabı Düzenle", `
+      <div class="field"><label>Hesap Adı</label><input id="ea_name" value="${a.name}"></div>
+      <div class="field"><label>Tür</label>
+        <select id="ea_type">
+          <option value="banka" ${a.type==="banka"?"selected":""}>🏦 Banka Hesabı</option>
+          <option value="nakit" ${a.type==="nakit"?"selected":""}>💵 Nakit Cüzdan</option>
+          <option value="dijital" ${a.type==="dijital"?"selected":""}>📱 Dijital Cüzdan</option>
+          <option value="kredi" ${a.type==="kredi"?"selected":""}>💳 Kredi Kartı</option>
+          <option value="diger" ${a.type==="diger"?"selected":""}>📦 Diğer</option>
+        </select>
+      </div>
+      <div class="field"><label>Başlangıç Bakiyesi ₺</label><input id="ea_balance" type="number" value="${a.initialBalance||0}"></div>
+      <div class="field"><label>Renk</label>
+        <select id="ea_color">
+          <option value="#1d3557" ${a.color==="#1d3557"?"selected":""}>🔵 Lacivert</option>
+          <option value="#2d6a4f" ${a.color==="#2d6a4f"?"selected":""}>🟢 Yeşil</option>
+          <option value="#b5830a" ${a.color==="#b5830a"?"selected":""}>🟡 Altın</option>
+          <option value="#c1121f" ${a.color==="#c1121f"?"selected":""}>🔴 Kırmızı</option>
+          <option value="#6d28d9" ${a.color==="#6d28d9"?"selected":""}>🟣 Mor</option>
+          <option value="#0d7377" ${a.color==="#0d7377"?"selected":""}>🩵 Teal</option>
+        </select>
+      </div>
+    `,`
+      <button class="btn-add" style="flex:1" onclick="window.H.saveAccount('${id}')">Kaydet</button>
+      <button class="btn-danger" onclick="window.H.deleteAccount('${id}');window.H.closeModal()">Hesabı Sil</button>
+    `);
+  },
+  async saveAccount(id){
+    const a=S.accounts.find(x=>x.id===id); if(!a) return;
+    const name=val("ea_name").trim(), type=val("ea_type");
+    const initialBalance=num("ea_balance"), color=val("ea_color");
+    if(!name){toast("Hesap adı boş olamaz","err");return;}
+    await setDoc(D("accounts",id),{...a,name,type,initialBalance,color});
+    window.H.closeModal();
+    toast("Hesap güncellendi ✓","ok");
+  },
+  async deleteAccount(id){
+    const linked=S.transactions.filter(t=>t.accountId===id).length;
+    if(linked>0){
+      if(!confirm(`Bu hesaba bağlı ${linked} işlem var. Hesabı silmek işlemleri silmez ama hesap ataması kalkar. Devam?`)) return;
+    } else {
+      if(!confirm("Hesabı silmek istediğinden emin misin?")) return;
+    }
+    await deleteDoc(D("accounts",id));
+    toast("Hesap silindi","ok");
+  },
+
   tab(name,btn){
     document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
     document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
