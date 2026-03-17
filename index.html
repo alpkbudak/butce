@@ -525,22 +525,25 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 
 <div id="toast"></div>
 
+
+</body>
+</html>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, collection, onSnapshot, setDoc, deleteDoc, getDocs, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const FB = {
   apiKey:"AIzaSyCLfCUmfz2G4ctjrSlg0c3jEDR_nOF_-RA",
-  authDomain:"butce-a.firebaseapp.com",
-  projectId:"butce-a",
+  authDomain:"butce-a.firebaseapp.com", projectId:"butce-a",
   storageBucket:"butce-a.firebasestorage.app",
   messagingSenderId:"924090596352",
   appId:"1:924090596352:web:134778b8f8d390c8016ce5"
 };
 const db = getFirestore(initializeApp(FB));
 const UID = "alp";
-const P = (c) => collection(db, `users/${UID}/${c}`);
-const D = (c,id) => doc(db, `users/${UID}/${c}/${id}`);
+const P  = (col) => collection(db, `users/${UID}/${col}`);
+const D  = (col, id) => doc(db, `users/${UID}/${col}/${id}`);
 const META = (k) => doc(db, `users/${UID}/meta/${k}`);
 
 const DEFAULT_CATS = [
@@ -554,42 +557,58 @@ const DEFAULT_CATS = [
   {id:"other_i",name:"Diğer Gelir",icon:"✨",type:"inc"}
 ];
 
-const S = { transactions:[], categories:[...DEFAULT_CATS], budgets:{}, debts:[], installments:[], creditCards:[], assets:[], goals:[], subscriptions:[], stocks:[] };
+const S = {
+  transactions:[], categories:[...DEFAULT_CATS], budgets:{},
+  debts:[], installments:[], creditCards:[],
+  assets:[], goals:[], subscriptions:[], stocks:[]
+};
 let curMonth = new Date(); curMonth.setDate(1);
-let qType="exp", fType="exp";
+let qType = "exp", fType = "exp";
 
-const $ = id => document.getElementById(id);
-const val = id => $( id)?.value||"";
-const num = id => parseFloat($(id)?.value)||0;
-const int = id => parseInt($(id)?.value)||0;
-const clr = (...ids) => ids.forEach(id=>{const el=$(id);if(el)el.value="";});
+const $   = id => document.getElementById(id);
+const val = id => $(id)?.value || "";
+const num = id => parseFloat($(id)?.value) || 0;
+const int = id => parseInt($(id)?.value) || 0;
+const clr = (...ids) => ids.forEach(id => { const el=$(id); if(el) el.value=""; });
 const money = n => (+n||0).toLocaleString("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2})+" ₺";
-const uid2 = () => Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-const getCat = id => S.categories.find(c=>c.id===id)||{name:id,icon:"📌",type:"exp"};
-const CC = {food:"#fb923c",market:"#facc15",trans:"#60a5fa",bills:"#a78bfa",rent:"#f472b6",health:"#34d399",ent:"#f87171",clothes:"#e879f9",tech:"#38bdf8",edu:"#4ade80",other_e:"#94a3b8",salary:"#4ade80",freelance:"#818cf8",invest:"#2dd4bf",other_i:"#a3e635"};
-const gc = id => CC[id]||"#8e8b80";
-const AI = {nakit:"💵",birikim:"🏦",altin:"🥇",hisse:"📈",kripto:"🔷",gayrimenkul:"🏠",diger:"📦"};
-const PT = {monthly:"Aylık",yearly:"Yıllık",weekly:"Haftalık"};
+const uid2  = () => Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const getCat = id => S.categories.find(c=>c.id===id) || {name:id,icon:"📌",type:"exp"};
+const CAT_COLORS = {food:"#fb923c",market:"#facc15",trans:"#60a5fa",bills:"#a78bfa",rent:"#f472b6",
+  health:"#34d399",ent:"#f87171",clothes:"#e879f9",tech:"#38bdf8",edu:"#4ade80",other_e:"#94a3b8",
+  salary:"#4ade80",freelance:"#818cf8",invest:"#2dd4bf",other_i:"#a3e635"};
+const gc  = id => CAT_COLORS[id] || "#8e8b80";
+const AI  = {nakit:"💵",birikim:"🏦",altin:"🥇",doviz:"💱",hisse:"📈",kripto:"🔷",gayrimenkul:"🏠",diger:"📦"};
+const PT  = {monthly:"Aylık",yearly:"Yıllık",weekly:"Haftalık"};
+const PAY_ICO = {nakit:"💵",kredi:"💳",banka:"🏦",dijital:"📱",otomatik:"🔄"};
+const PAY_LBL = {nakit:"Nakit",kredi:"Kredi Kartı",banka:"Banka",dijital:"Dijital",otomatik:"Otomatik"};
 
-function syncStatus(st,txt){
-  const dot=$("syncDot"),sp=$("syncTxt");
+function syncStatus(st, txt) {
+  const dot=$("syncDot"), sp=$("syncTxt");
   if(dot) dot.className="sync-dot"+(st?" "+st:"");
   if(sp) sp.textContent=txt;
   if(st==="ok"){const el=$("settSync");if(el)el.textContent="Son: "+new Date().toLocaleTimeString("tr-TR");}
 }
-function toast(msg,type=""){
-  const el=$("toast"); el.textContent=msg; el.className="toast show"+(type?" "+type:"");
+function toast(msg, type="") {
+  const el=$("toast"); el.textContent=msg;
+  el.className="toast show"+(type?" "+type:"");
   setTimeout(()=>el.classList.remove("show"),2600);
 }
-function monthTxns(){
-  const y=curMonth.getFullYear(),m=curMonth.getMonth();
-  return S.transactions.filter(t=>{const d=new Date(t.date);return d.getFullYear()===y&&d.getMonth()===m;}).sort((a,b)=>new Date(b.date)-new Date(a.date));
+function monthTxns() {
+  const y=curMonth.getFullYear(), m=curMonth.getMonth();
+  return S.transactions.filter(t=>{
+    const d=new Date(t.date); return d.getFullYear()===y && d.getMonth()===m;
+  }).sort((a,b)=>new Date(b.date)-new Date(a.date));
 }
 
-async function initData(){
+// ── INIT ──
+async function initData() {
   syncStatus("busy","Yükleniyor...");
-  const snap=await getDocs(P("categories"));
-  if(snap.empty){const b=writeBatch(db);DEFAULT_CATS.forEach(c=>b.set(D("categories",c.id),c));await b.commit();}
+  const snap = await getDocs(P("categories"));
+  if(snap.empty){
+    const b=writeBatch(db);
+    DEFAULT_CATS.forEach(c=>b.set(D("categories",c.id),c));
+    await b.commit();
+  }
   onSnapshot(P("transactions"),  s=>{S.transactions  =s.docs.map(d=>({id:d.id,...d.data()}));render();syncStatus("ok","Güncel");});
   onSnapshot(P("categories"),    s=>{S.categories    =s.docs.map(d=>({id:d.id,...d.data()}));render();});
   onSnapshot(META("budgets"),    s=>{S.budgets       =s.exists()?(s.data().data||{}):{};render();});
@@ -599,41 +618,59 @@ async function initData(){
   onSnapshot(P("assets"),        s=>{S.assets        =s.docs.map(d=>({id:d.id,...d.data()}));render();});
   onSnapshot(P("goals"),         s=>{S.goals         =s.docs.map(d=>({id:d.id,...d.data()}));render();});
   onSnapshot(P("subscriptions"), s=>{S.subscriptions =s.docs.map(d=>({id:d.id,...d.data()}));render();});
-  onSnapshot(P("stocks"),        s=>{S.stocks        =s.docs.map(d=>({id:d.id,...d.data()}));
-    // Refresh stock prices once per day (check localStorage for last fetch date)
+  onSnapshot(P("stocks"), s=>{
+    S.stocks=s.docs.map(d=>({id:d.id,...d.data()}));
+    render();
     const today=new Date().toDateString();
-    const lastFetch=localStorage.getItem("stocks_fetched");
-    if(lastFetch!==today){localStorage.setItem("stocks_fetched",today);setTimeout(()=>window.H.refreshStocks(),2000);}
-    else{setTimeout(()=>window.H.refreshStocks(),500);}
+    if(localStorage.getItem("stocks_fetched")!==today){
+      localStorage.setItem("stocks_fetched",today);
+      setTimeout(()=>window.H.refreshStocks(),2000);
+    } else {
+      setTimeout(()=>window.H.refreshStocks(),500);
+    }
   });
 }
 
-function render(){
+// ══════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════
+function render() {
   const lbl=curMonth.toLocaleString("tr-TR",{month:"long",year:"numeric"});
-  const ml=$("monthLabel");if(ml)ml.textContent=lbl;
-  rNetWorth();rCards();rRecent();rCatTags();rTxns();rBudget();rChart();rStats();
-  rDebts();rInstallments();rCreditCards();rAssets();rGoals();rSubs();rCatManage();fillSelects();rUpcoming();
+  const ml=$("monthLabel"); if(ml) ml.textContent=lbl;
+  rNetWorth(); rCards(); rRecent(); rCatTags();
+  rTxns(); rBudget(); rChart(); rStats();
+  rDebts(); rInstallments(); rCreditCards();
+  rAssets(); rGoals(); rSubs();
+  rCatManage(); fillSelects(); rUpcoming();
 }
 
-function rNetWorth(){
+function rNetWorth() {
   const ta=S.assets.reduce((s,a)=>s+a.amount,0);
   const td=S.debts.filter(d=>!d.paid).reduce((s,d)=>s+d.amount,0);
   const ti=S.installments.reduce((s,i)=>s+(i.monthly*i.remaining),0);
   const tc=S.creditCards.reduce((s,c)=>s+c.balance,0);
   const to=td+ti+tc, net=ta-to;
-  const v=$("netWorthVal"); if(v){v.textContent=money(net);v.style.color=net>=0?"var(--green)":"var(--red)";}
-  const b=$("netWorthBreakdown"); if(b) b.innerHTML=`
-    <div style="text-align:center"><div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">Toplam Varlık</div><div style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:var(--green)">${money(ta)}</div></div>
+  const v=$("netWorthVal");
+  if(v){v.textContent=money(net);v.style.color=net>=0?"var(--green)":"var(--red)";}
+  const b=$("netWorthBreakdown");
+  if(b) b.innerHTML=`
+    <div style="text-align:center">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">Toplam Varlık</div>
+      <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:var(--green)">${money(ta)}</div>
+    </div>
     <div style="color:var(--line);font-size:20px;align-self:center">−</div>
-    <div style="text-align:center"><div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">Toplam Borç</div><div style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:var(--red)">${money(to)}</div></div>`;
+    <div style="text-align:center">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px">Toplam Borç</div>
+      <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:700;color:var(--red)">${money(to)}</div>
+    </div>`;
 }
 
-function rCards(){
+function rCards() {
   const t=monthTxns();
   const inc=t.filter(x=>x.type==="inc").reduce((s,x)=>s+x.amount,0);
   const exp=t.filter(x=>x.type==="exp").reduce((s,x)=>s+x.amount,0);
   const net=inc-exp, pct=inc>0?Math.round((net/inc)*100):0;
-  const el=$("summaryCards");if(!el)return;
+  const el=$("summaryCards"); if(!el) return;
   el.innerHTML=`
     <div class="card c-green"><div class="card-tag">💚 Gelir</div><div class="card-val">${money(inc)}</div><div class="card-sub">${t.filter(x=>x.type==="inc").length} işlem</div></div>
     <div class="card c-red"><div class="card-tag">❤️ Gider</div><div class="card-val">${money(exp)}</div><div class="card-sub">${t.filter(x=>x.type==="exp").length} işlem</div></div>
@@ -641,11 +678,11 @@ function rCards(){
     <div class="card c-gold"><div class="card-tag">⭐ Tasarruf</div><div class="card-val">%${pct}</div><div class="card-sub">gelirin %${pct}'i</div></div>`;
 }
 
-const PAY_ICO={"nakit":"💵","kredi":"💳","banka":"🏦","dijital":"📱","otomatik":"🔄"};
-const PAY_LBL={"nakit":"Nakit","kredi":"Kredi Kartı","banka":"Banka","dijital":"Dijital","otomatik":"Otomatik"};
-function txnRow(t){
-  const c=getCat(t.category),col=gc(t.category);
-  const payBadge=t.payMethod?`<span style="font-size:10px;background:var(--paper2);border-radius:4px;padding:1px 5px;color:var(--muted);margin-left:4px">${PAY_ICO[t.payMethod]||""} ${PAY_LBL[t.payMethod]||t.payMethod}</span>`:"";
+function txnRow(t) {
+  const c=getCat(t.category), col=gc(t.category);
+  const payBadge = t.payMethod
+    ? `<span style="font-size:10px;background:var(--paper2);border-radius:4px;padding:1px 5px;color:var(--muted);margin-left:4px">${PAY_ICO[t.payMethod]||""} ${PAY_LBL[t.payMethod]||t.payMethod}</span>`
+    : "";
   return `<div class="txn">
     <div class="txn-ico" style="background:${col}20;color:${col}">${c.icon}</div>
     <div><div class="txn-name">${t.name}${payBadge}</div><div class="txn-cat">${c.name}${t.note?" · "+t.note:""}</div></div>
@@ -654,7 +691,7 @@ function txnRow(t){
   </div>`;
 }
 function rRecent(){const el=$("recentList");if(!el)return;const l=monthTxns().slice(0,6);el.innerHTML=l.length?l.map(txnRow).join(""):`<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Bu ay işlem yok</div></div>`;}
-function rTxns(){const el=$("txnList");if(!el)return;const q=(val("searchQ")).toLowerCase();let l=monthTxns();if(q)l=l.filter(t=>t.name.toLowerCase().includes(q)||getCat(t.category).name.toLowerCase().includes(q));el.innerHTML=l.length?l.map(txnRow).join(""):`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">İşlem bulunamadı</div></div>`;}
+function rTxns(){const el=$("txnList");if(!el)return;const q=val("searchQ").toLowerCase();let l=monthTxns();if(q)l=l.filter(t=>t.name.toLowerCase().includes(q)||getCat(t.category).name.toLowerCase().includes(q));el.innerHTML=l.length?l.map(txnRow).join(""):`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">İşlem bulunamadı</div></div>`;}
 function rCatTags(){const el=$("catTags");if(!el)return;const exp={};monthTxns().filter(t=>t.type==="exp").forEach(t=>{exp[t.category]=(exp[t.category]||0)+t.amount;});const s=Object.entries(exp).sort((a,b)=>b[1]-a[1]).slice(0,8);el.innerHTML=s.length?s.map(([id,amt])=>{const c=getCat(id),col=gc(id);return`<div class="ctag" style="background:${col}18;border-color:${col}40;color:${col}">${c.icon} ${c.name} <strong style="margin-left:3px">${money(amt)}</strong></div>`;}).join(""):`<div style="color:var(--muted);font-size:12px">Henüz gider yok</div>`;}
 
 function rBudget(){
@@ -662,7 +699,11 @@ function rBudget(){
   const exp={};monthTxns().filter(t=>t.type==="exp").forEach(t=>{exp[t.category]=(exp[t.category]||0)+t.amount;});
   const entries=Object.entries(S.budgets);
   if(!entries.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">Bütçe eklenmedi</div></div>`;return;}
-  el.innerHTML=entries.map(([id,lim])=>{const c=getCat(id),spent=exp[id]||0,pct=Math.min(100,lim>0?(spent/lim)*100:0);const col=pct>=100?"var(--red)":pct>=75?"#fb923c":"var(--green)";return`<div class="b-row"><div class="b-top"><div class="b-name">${c.icon} ${c.name}</div><div class="b-nums"><strong>${money(spent)}</strong> / ${money(lim)}</div></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div></div>`;}).join("");
+  el.innerHTML=entries.map(([id,lim])=>{
+    const c=getCat(id),spent=exp[id]||0,pct=Math.min(100,lim>0?(spent/lim)*100:0);
+    const col=pct>=100?"var(--red)":pct>=75?"#fb923c":"var(--green)";
+    return `<div class="b-row"><div class="b-top"><div class="b-name">${c.icon} ${c.name}</div><div class="b-nums"><strong>${money(spent)}</strong> / ${money(lim)}</div></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div></div>`;
+  }).join("");
 }
 
 function rChart(){
@@ -688,12 +729,31 @@ function rStats(){
   const days=new Date(curMonth.getFullYear(),curMonth.getMonth()+1,0).getDate();
   const dm={};t.filter(x=>x.type==="exp").forEach(x=>{dm[x.date]=(dm[x.date]||0)+x.amount;});
   const td=Object.entries(dm).sort((a,b)=>b[1]-a[1])[0];
-  sc.innerHTML=`<div class="card c-green"><div class="card-tag">💰 Gelir</div><div class="card-val">${money(inc)}</div></div><div class="card c-red"><div class="card-tag">💸 Gider</div><div class="card-val">${money(exp)}</div></div><div class="card c-blue"><div class="card-tag">📅 Günlük Ort.</div><div class="card-val">${money(exp/days)}</div></div><div class="card c-gold"><div class="card-tag">🔥 En Yoğun Gün</div><div class="card-val" style="font-size:16px">${td?new Date(td[0]).toLocaleDateString("tr-TR",{day:"numeric",month:"short"}):"—"}</div></div>`;
+  const pm={};t.filter(x=>x.payMethod).forEach(x=>{pm[x.payMethod]=(pm[x.payMethod]||0)+x.amount;});
+  const pmRows=Object.entries(pm).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span style="color:var(--muted)">${PAY_ICO[k]||""} ${PAY_LBL[k]||k}</span><span style="font-weight:600">${money(v)}</span></div>`).join("");
+  sc.innerHTML=`
+    <div class="card c-green"><div class="card-tag">💰 Gelir</div><div class="card-val">${money(inc)}</div></div>
+    <div class="card c-red"><div class="card-tag">💸 Gider</div><div class="card-val">${money(exp)}</div></div>
+    <div class="card c-blue"><div class="card-tag">📅 Günlük Ort.</div><div class="card-val">${money(exp/days)}</div></div>
+    <div class="card c-gold"><div class="card-tag">🔥 En Yoğun Gün</div><div class="card-val" style="font-size:16px">${td?new Date(td[0]).toLocaleDateString("tr-TR",{day:"numeric",month:"short"}):"—"}</div></div>`;
   const ec={};t.filter(x=>x.type==="exp").forEach(x=>{ec[x.category]=(ec[x.category]||0)+x.amount;});
   const sorted=Object.entries(ec).sort((a,b)=>b[1]-a[1]);
   sg.innerHTML=`
-    <div class="panel"><div class="panel-head"><div class="panel-title">Gider Dağılımı</div></div><div style="padding:14px 18px">${sorted.length?sorted.map(([id,amt])=>{const c=getCat(id),col=gc(id),pct=exp>0?(amt/exp)*100:0;return`<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px"><span>${c.icon} ${c.name}</span><span style="color:var(--muted)">${pct.toFixed(1)}% · ${money(amt)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div></div>`;}).join(""):`<div class="empty"><div class="empty-text">Veri yok</div></div>`}</div></div>
-    <div class="panel"><div class="panel-head"><div class="panel-title">Özet</div></div><div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px"><div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Gelir</span><span style="color:var(--green);font-weight:700">${money(inc)}</span></div><div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Gider</span><span style="color:var(--red);font-weight:700">${money(exp)}</span></div><div style="border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--muted)">Net</span><span style="color:${inc-exp>=0?"var(--green)":"var(--red)"};font-weight:700">${money(inc-exp)}</span></div><div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">İşlem Sayısı</span><span>${t.length}</span></div>${td?`<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">En Yüksek Gün</span><span>${new Date(td[0]).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})} · ${money(td[1])}</span></div>`:""}</div></div>`;
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">Gider Dağılımı</div></div>
+      <div style="padding:14px 18px">${sorted.length?sorted.map(([id,amt])=>{const c=getCat(id),col=gc(id),pct=exp>0?(amt/exp)*100:0;return`<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px"><span>${c.icon} ${c.name}</span><span style="color:var(--muted)">${pct.toFixed(1)}% · ${money(amt)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div></div>`;}).join(""):`<div class="empty"><div class="empty-text">Veri yok</div></div>`}</div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">Özet</div></div>
+      <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Gelir</span><span style="color:var(--green);font-weight:700">${money(inc)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Gider</span><span style="color:var(--red);font-weight:700">${money(exp)}</span></div>
+        <div style="border-top:1px solid var(--line);padding-top:10px;display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--muted)">Net</span><span style="color:${inc-exp>=0?"var(--green)":"var(--red)"};font-weight:700">${money(inc-exp)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">İşlem Sayısı</span><span>${t.length}</span></div>
+        ${td?`<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">En Yüksek Gün</span><span>${new Date(td[0]).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})} · ${money(td[1])}</span></div>`:""}
+        ${pmRows?`<div style="border-top:1px solid var(--line);padding-top:8px;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:2px">ÖDEME YÖNTEMLERİ</div>${pmRows}`:""}
+      </div>
+    </div>`;
 }
 
 function rDebts(){
@@ -702,20 +762,63 @@ function rDebts(){
   const td=active.reduce((s,d)=>s+d.amount,0);
   const ti=S.installments.reduce((s,i)=>s+(i.monthly*i.remaining),0);
   const tc=S.creditCards.reduce((s,c)=>s+c.balance,0);
-  dc.innerHTML=`<div class="card c-red"><div class="card-tag">💸 Borçlarım</div><div class="card-val">${money(td)}</div><div class="card-sub">${active.length} aktif</div></div><div class="card c-gold"><div class="card-tag">📆 Taksit Toplamı</div><div class="card-val">${money(ti)}</div><div class="card-sub">${S.installments.length} kredi</div></div><div class="card c-purple"><div class="card-tag">💳 Kart Borcu</div><div class="card-val">${money(tc)}</div><div class="card-sub">${S.creditCards.length} kart</div></div><div class="card c-blue"><div class="card-tag">🔴 Toplam</div><div class="card-val">${money(td+ti+tc)}</div></div>`;
-  dl.innerHTML=active.length?active.map(d=>{const due=d.due?new Date(d.due):null;const ov=due&&due<new Date();return`<div class="g-row"><div class="g-row-left"><div class="g-row-title">💸 ${d.name}</div><div class="g-row-sub">${d.note||""}${due?" · Vade: "+due.toLocaleDateString("tr-TR",{day:"numeric",month:"short",year:"numeric"}):""}</div></div><div class="g-row-right"><div class="g-row-val" style="color:var(--red)">${money(d.amount)}</div><div style="display:flex;gap:5px;justify-content:flex-end;margin-top:4px"><span class="badge ${ov?"badge-red":"badge-gold"}">${ov?"Vadesi geçti":"Aktif"}</span><button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.markDebtPaid('${d.id}')">Ödendi ✓</button><button class="del-btn" style="display:block" onclick="window.H.delDoc('debts','${d.id}')">✕</button></div></div></div>`;}).join(""):`<div class="empty"><div class="empty-icon">🎉</div><div class="empty-text">Aktif borç yok</div></div>`;
+  dc.innerHTML=`
+    <div class="card c-red"><div class="card-tag">💸 Borçlarım</div><div class="card-val">${money(td)}</div><div class="card-sub">${active.length} aktif</div></div>
+    <div class="card c-gold"><div class="card-tag">📆 Taksit Toplamı</div><div class="card-val">${money(ti)}</div><div class="card-sub">${S.installments.length} kredi</div></div>
+    <div class="card c-purple"><div class="card-tag">💳 Kart Borcu</div><div class="card-val">${money(tc)}</div><div class="card-sub">${S.creditCards.length} kart</div></div>
+    <div class="card c-blue"><div class="card-tag">🔴 Toplam</div><div class="card-val">${money(td+ti+tc)}</div></div>`;
+  dl.innerHTML=active.length?active.map(d=>{
+    const due=d.due?new Date(d.due):null;
+    const ov=due&&due<new Date();
+    return `<div class="g-row">
+      <div class="g-row-left"><div class="g-row-title">💸 ${d.name}</div><div class="g-row-sub">${d.note||""}${due?" · Vade: "+due.toLocaleDateString("tr-TR",{day:"numeric",month:"short",year:"numeric"}):""}</div></div>
+      <div class="g-row-right"><div class="g-row-val" style="color:var(--red)">${money(d.amount)}</div>
+        <div style="display:flex;gap:5px;justify-content:flex-end;margin-top:4px">
+          <span class="badge ${ov?"badge-red":"badge-gold"}">${ov?"Vadesi geçti":"Aktif"}</span>
+          <button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.markDebtPaid('${d.id}')">Ödendi ✓</button>
+          <button class="del-btn" style="display:block" onclick="window.H.delDoc('debts','${d.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join(""):`<div class="empty"><div class="empty-icon">🎉</div><div class="empty-text">Aktif borç yok</div></div>`;
   const paid=S.debts.filter(d=>d.paid);
-  if(paid.length) dl.innerHTML+=`<div style="padding:8px 18px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)">Ödenenler: ${paid.map(d=>`${d.name} (${money(d.amount)})`).join(", ")}</div>`;
+  if(paid.length) dl.innerHTML+=`<div style="padding:8px 18px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)">Ödenenler: ${paid.map(d=>d.name).join(", ")}</div>`;
 }
 
 function rInstallments(){
   const el=$("installmentList");if(!el)return;
-  el.innerHTML=S.installments.length?S.installments.map(i=>{const total=i.monthly*i.remaining;return`<div class="b-row"><div class="b-top"><div class="b-name">📆 ${i.name}</div><div style="display:flex;align-items:center;gap:8px"><div class="b-nums">${i.remaining} taksit × ${money(i.monthly)} = <strong>${money(total)}</strong></div><button class="del-btn" style="display:block" onclick="window.H.delDoc('installments','${i.id}')">✕</button></div></div><div style="display:flex;align-items:center;gap:8px"><div style="font-size:11px;color:var(--muted)">Ödeme günü: ${i.day||"—"}. gün</div></div></div>`;}).join(""):`<div class="empty"><div class="empty-icon">📆</div><div class="empty-text">Taksit eklenmedi</div></div>`;
+  el.innerHTML=S.installments.length?S.installments.map(i=>`
+    <div class="b-row">
+      <div class="b-top"><div class="b-name">📆 ${i.name}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="b-nums">${i.remaining} × ${money(i.monthly)} = <strong>${money(i.monthly*i.remaining)}</strong></div>
+          <button class="del-btn" style="display:block" onclick="window.H.delDoc('installments','${i.id}')">✕</button>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">Ödeme günü: ${i.day||"—"}. gün</div>
+    </div>`).join(""):`<div class="empty"><div class="empty-icon">📆</div><div class="empty-text">Taksit eklenmedi</div></div>`;
 }
 
 function rCreditCards(){
   const el=$("creditCardList");if(!el)return;
-  el.innerHTML=S.creditCards.length?S.creditCards.map(c=>{const pct=c.limit>0?(c.balance/c.limit)*100:0;const col=pct>=80?"var(--red)":pct>=50?"#fb923c":"var(--blue)";return`<div class="b-row"><div class="b-top"><div class="b-name">💳 ${c.name}</div><div style="display:flex;align-items:center;gap:8px"><div class="b-nums"><strong style="color:var(--red)">${money(c.balance)}</strong> / ${money(c.limit)}</div><button class="del-btn" style="display:block" onclick="window.H.delDoc('creditCards','${c.id}')">✕</button></div></div><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,pct)}%;background:${col}"></div></div><div style="display:flex;gap:12px;margin-top:5px;font-size:11px;color:var(--muted)"><span>Ekstre: ${c.statementDay||"—"}. gün</span><span>Son ödeme: ${c.dueDay||"—"}. gün</span><span>Kullanım: %${pct.toFixed(0)}</span></div></div>`;}).join(""):`<div class="empty"><div class="empty-icon">💳</div><div class="empty-text">Kart eklenmedi</div></div>`;
+  el.innerHTML=S.creditCards.length?S.creditCards.map(c=>{
+    const pct=c.limit>0?(c.balance/c.limit)*100:0;
+    const col=pct>=80?"var(--red)":pct>=50?"#fb923c":"var(--blue)";
+    return `<div class="b-row">
+      <div class="b-top"><div class="b-name">💳 ${c.name}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="b-nums"><strong style="color:var(--red)">${money(c.balance)}</strong> / ${money(c.limit)}</div>
+          <button class="del-btn" style="display:block" onclick="window.H.delDoc('creditCards','${c.id}')">✕</button>
+        </div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,pct)}%;background:${col}"></div></div>
+      <div style="display:flex;gap:12px;margin-top:5px;font-size:11px;color:var(--muted)">
+        <span>Ekstre: ${c.statementDay||"—"}. gün</span>
+        <span>Son ödeme: ${c.dueDay||"—"}. gün</span>
+        <span>Kullanım: %${pct.toFixed(0)}</span>
+      </div>
+    </div>`;
+  }).join(""):`<div class="empty"><div class="empty-icon">💳</div><div class="empty-text">Kart eklenmedi</div></div>`;
 }
 
 function rAssets(){
@@ -727,15 +830,42 @@ function rAssets(){
   al.innerHTML=S.assets.length?S.assets.map(a=>{
     const unitStr=a.qty?`${a.qty} ${a.unit||""} · `:"";
     const costStr=a.costTL?` · Alış: ${money(a.costTL)}`:"";
-    const gainStr=(a.costTL&&a.amount)?((a.amount-a.costTL)/a.costTL*100).toFixed(1):"";
-    const gainBadge=gainStr?`<span style="font-size:11px;font-weight:600;color:${+gainStr>=0?"var(--green)":"var(--red)"}">${+gainStr>=0?"▲":"▼"}%${Math.abs(gainStr)}</span>`:"";
-    return`<div class="g-row"><div class="g-row-left"><div class="g-row-title">${AI[a.type]||"📦"} ${a.name}</div><div class="g-row-sub">${unitStr}${a.type}${a.note?" · "+a.note:""}${costStr}</div></div><div class="g-row-right"><div class="g-row-val" style="color:var(--teal);display:flex;align-items:center;gap:6px">${money(a.amount)} ${gainBadge}</div><div style="display:flex;justify-content:flex-end;margin-top:4px;gap:5px"><button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.editAsset('${a.id}')">Güncelle</button><button class="del-btn" style="display:block" onclick="window.H.delDoc('assets','${a.id}')">✕</button></div></div></div>`;
+    const gainStr=(a.costTL&&a.amount&&a.costTL>0)?((a.amount-a.costTL)/a.costTL*100).toFixed(1):"";
+    const gainBadge=gainStr?`<span style="font-size:11px;font-weight:600;color:${+gainStr>=0?"var(--green)":"var(--red)"}">${+gainStr>=0?"▲":"▼"}%${Math.abs(+gainStr)}</span>`:"";
+    return `<div class="g-row">
+      <div class="g-row-left"><div class="g-row-title">${AI[a.type]||"📦"} ${a.name}</div><div class="g-row-sub">${unitStr}${a.type}${a.note?" · "+a.note:""}${costStr}</div></div>
+      <div class="g-row-right">
+        <div class="g-row-val" style="color:var(--teal);display:flex;align-items:center;gap:6px">${money(a.amount)} ${gainBadge}</div>
+        <div style="display:flex;justify-content:flex-end;margin-top:4px;gap:5px">
+          <button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.editAsset('${a.id}')">Güncelle</button>
+          <button class="del-btn" style="display:block" onclick="window.H.delDoc('assets','${a.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
   }).join(""):`<div class="empty"><div class="empty-icon">🏦</div><div class="empty-text">Varlık eklenmedi</div></div>`;
 }
 
 function rGoals(){
   const el=$("goalList");if(!el)return;
-  el.innerHTML=S.goals.length?S.goals.map(g=>{const pct=g.target>0?Math.min(100,(g.current/g.target)*100):0;const rem=g.target-g.current;const dl=g.date?Math.ceil((new Date(g.date)-new Date())/(864e5)):null;return`<div class="b-row"><div class="b-top"><div class="b-name">${g.icon||"🎯"} ${g.name}</div><div style="display:flex;align-items:center;gap:8px"><span class="badge badge-${pct>=100?"green":"blue"}">%${pct.toFixed(0)}</span><button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.addToGoal('${g.id}')">+ Para ekle</button><button class="del-btn" style="display:block" onclick="window.H.delDoc('goals','${g.id}')">✕</button></div></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--blue)"></div></div><div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:var(--muted)"><span>${money(g.current)} / ${money(g.target)}</span><span>${rem>0?money(rem)+" kaldı":"Hedefe ulaşıldı 🎉"}${dl!=null?" · "+dl+" gün":""}</span></div></div>`;}).join(""):`<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">Hedef eklenmedi</div></div>`;
+  el.innerHTML=S.goals.length?S.goals.map(g=>{
+    const pct=g.target>0?Math.min(100,(g.current/g.target)*100):0;
+    const rem=g.target-g.current;
+    const dl=g.date?Math.ceil((new Date(g.date)-new Date())/(864e5)):null;
+    return `<div class="b-row">
+      <div class="b-top"><div class="b-name">${g.icon||"🎯"} ${g.name}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="badge badge-${pct>=100?"green":"blue"}">%${pct.toFixed(0)}</span>
+          <button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.addToGoal('${g.id}')">+ Para ekle</button>
+          <button class="del-btn" style="display:block" onclick="window.H.delDoc('goals','${g.id}')">✕</button>
+        </div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--blue)"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11px;color:var(--muted)">
+        <span>${money(g.current)} / ${money(g.target)}</span>
+        <span>${rem>0?money(rem)+" kaldı":"Hedefe ulaşıldı 🎉"}${dl!=null?" · "+dl+" gün":""}</span>
+      </div>
+    </div>`;
+  }).join(""):`<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">Hedef eklenmedi</div></div>`;
 }
 
 function rSubs(){
@@ -744,10 +874,24 @@ function rSubs(){
   const yr=S.subscriptions.filter(s=>s.period==="yearly").reduce((s,x)=>s+x.amount/12,0);
   const wk=S.subscriptions.filter(s=>s.period==="weekly").reduce((s,x)=>s+x.amount*4.33,0);
   const tot=mo+yr+wk;
-  sc.innerHTML=`<div class="card c-purple"><div class="card-tag">📅 Aylık Toplam</div><div class="card-val">${money(tot)}</div><div class="card-sub">${S.subscriptions.length} abonelik</div></div><div class="card c-blue"><div class="card-tag">📆 Yıllık Toplam</div><div class="card-val">${money(tot*12)}</div></div>`;
+  sc.innerHTML=`
+    <div class="card c-purple"><div class="card-tag">📅 Aylık Toplam</div><div class="card-val">${money(tot)}</div><div class="card-sub">${S.subscriptions.length} abonelik</div></div>
+    <div class="card c-blue"><div class="card-tag">📆 Yıllık Toplam</div><div class="card-val">${money(tot*12)}</div></div>`;
   const today=new Date().getDate();
   const sorted=[...S.subscriptions].sort((a,b)=>((+a.day-today+31)%31)-((+b.day-today+31)%31));
-  sl.innerHTML=sorted.length?sorted.map(s=>{const du=((+s.day-today+31)%31)||31;return`<div class="g-row"><div class="g-row-left"><div class="g-row-title">${s.icon||"📌"} ${s.name}</div><div class="g-row-sub">${PT[s.period]||s.period} · ${s.cat||""}</div></div><div class="g-row-right"><div class="g-row-val" style="color:var(--purple)">${money(s.amount)}</div><div style="display:flex;gap:5px;justify-content:flex-end;margin-top:4px;align-items:center"><span class="badge badge-${du<=3?"red":du<=7?"gold":"muted"}">${du===0?"Bugün":du+" gün"}</span><button class="del-btn" style="display:block" onclick="window.H.delDoc('subscriptions','${s.id}')">✕</button></div></div></div>`;}).join(""):`<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Abonelik eklenmedi</div></div>`;
+  sl.innerHTML=sorted.length?sorted.map(s=>{
+    const du=((+s.day-today+31)%31)||31;
+    return `<div class="g-row">
+      <div class="g-row-left"><div class="g-row-title">${s.icon||"📌"} ${s.name}</div><div class="g-row-sub">${PT[s.period]||s.period} · ${s.cat||""}</div></div>
+      <div class="g-row-right">
+        <div class="g-row-val" style="color:var(--purple)">${money(s.amount)}</div>
+        <div style="display:flex;gap:5px;justify-content:flex-end;margin-top:4px;align-items:center">
+          <span class="badge badge-${du<=3?"red":du<=7?"gold":"muted"}">${du===0?"Bugün":du+" gün"}</span>
+          <button class="del-btn" style="display:block" onclick="window.H.delDoc('subscriptions','${s.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join(""):`<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Abonelik eklenmedi</div></div>`;
 }
 
 function rUpcoming(){
@@ -755,20 +899,210 @@ function rUpcoming(){
   const today=new Date().getDate(), items=[];
   S.subscriptions.forEach(s=>{const d=((+s.day-today+31)%31)||31;if(d<=14)items.push({label:`${s.icon||"📌"} ${s.name}`,amount:s.amount,days:d,color:"var(--purple)"});});
   S.installments.forEach(i=>{const d=((+i.day-today+31)%31)||31;if(d<=14)items.push({label:`📆 ${i.name}`,amount:i.monthly,days:d,color:"var(--gold)"});});
-  S.creditCards.forEach(c=>{const d=((+c.dueDay-today+31)%31)||31;if(d<=14)items.push({label:`💳 ${c.name} son ödeme`,amount:c.balance,days:d,color:"var(--red)"});});
+  S.creditCards.forEach(c=>{const d=((+c.dueDay-today+31)%31)||31;if(d<=14)items.push({label:`💳 ${c.name}`,amount:c.balance,days:d,color:"var(--red)"});});
   items.sort((a,b)=>a.days-b.days);
   el.innerHTML=items.length?items.map(i=>`<div class="g-row"><div class="g-row-left"><div class="g-row-title">${i.label}</div></div><div class="g-row-right"><div class="g-row-val" style="color:${i.color}">${money(i.amount)}</div><div class="g-row-meta">${i.days===0?"Bugün":i.days+" gün sonra"}</div></div></div>`).join(""):`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">14 gün içinde ödeme yok</div></div>`;
 }
 
-function rCatManage(){const el=$("catManage");if(!el)return;el.innerHTML=S.categories.map(c=>`<div class="cat-chip">${c.icon} ${c.name}<span style="color:var(--muted);font-size:10px"> ${c.type==="exp"?"G":"+"}</span><button onclick="window.H.deleteCat('${c.id}')">×</button></div>`).join("");}
-function fillSelects(){
-  ["q_c","f_c"].forEach(id=>{const sel=$(id);if(!sel)return;const type=id==="q_c"?qType:fType,prev=sel.value;sel.innerHTML="<option value=''>Seç...</option>"+S.categories.filter(c=>c.type===type).map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join("");if(prev)sel.value=prev;});
-  const bc=$("b_c");if(bc)bc.innerHTML="<option value=''>Seç...</option>"+S.categories.filter(c=>c.type==="exp").map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join("");
+function rCatManage(){
+  const el=$("catManage");if(!el)return;
+  el.innerHTML=S.categories.map(c=>`<div class="cat-chip">${c.icon} ${c.name}<span style="color:var(--muted);font-size:10px"> ${c.type==="exp"?"G":"+"}</span><button onclick="window.H.deleteCat('${c.id}')">×</button></div>`).join("");
 }
 
-// ── EXPOSE TO HTML via window.H ──
+function fillSelects(){
+  ["q_c","f_c"].forEach(id=>{
+    const sel=$(id);if(!sel)return;
+    const type=id==="q_c"?qType:fType, prev=sel.value;
+    sel.innerHTML="<option value=''>Seç...</option>"+S.categories.filter(c=>c.type===type).map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join("");
+    if(prev) sel.value=prev;
+  });
+  const bc=$("b_c");
+  if(bc) bc.innerHTML="<option value=''>Seç...</option>"+S.categories.filter(c=>c.type==="exp").map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join("");
+}
+
+// ══════════════════════════════════════════
+// MARKET DATA
+// ══════════════════════════════════════════
+const MKT = {
+  data:{},
+  lastUpdate:null,
+
+  async fetch(){
+    try {
+      await Promise.allSettled([MKT.fetchFX(), MKT.fetchCrypto(), MKT.fetchBIST()]);
+      MKT.lastUpdate=new Date();
+      MKT.render();
+    } catch(e){ console.warn("Market fetch error:",e); }
+  },
+
+  async fetchFX(){
+    const r=await fetch("https://open.er-api.com/v6/latest/USD");
+    const d=await r.json();
+    if(!d.rates) return;
+    MKT.data.usdtry=d.rates.TRY;
+    MKT.data.eurtry=d.rates.TRY/d.rates.EUR;
+    MKT.data.gbptry=d.rates.TRY/d.rates.GBP;
+    try {
+      const gr=await fetch("https://open.er-api.com/v6/latest/XAU");
+      const gd=await gr.json();
+      if(gd.rates&&gd.rates.TRY){
+        MKT.data.xautry=gd.rates.TRY;
+        MKT.data.gramAltin=gd.rates.TRY/31.1035;
+      }
+    } catch(e){}
+  },
+
+  async fetchCrypto(){
+    const r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple&vs_currencies=usd,try&include_24hr_change=true");
+    const d=await r.json();
+    MKT.data.crypto=d;
+  },
+
+  async fetchBIST(){
+    const symbols=["XU100.IS","XU030.IS"];
+    const results=await Promise.allSettled(symbols.map(sym=>
+      fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`)
+        .then(r=>r.json())
+        .then(d=>{
+          const q=d?.chart?.result?.[0];
+          if(!q) return null;
+          const meta=q.meta;
+          return{sym,price:meta.regularMarketPrice,prev:meta.chartPreviousClose,name:sym==="XU100.IS"?"BIST 100":"BIST 30"};
+        })
+    ));
+    MKT.data.indices=results.filter(r=>r.status==="fulfilled"&&r.value).map(r=>r.value);
+  },
+
+  fmt(n,dec=2){ if(n==null) return "—"; return (+n).toLocaleString("tr-TR",{minimumFractionDigits:dec,maximumFractionDigits:dec}); },
+
+  chgHtml(chg){
+    if(chg==null) return "";
+    const sign=chg>=0?"+":"";
+    const cls=chg>=0?"chg-up":"chg-dn";
+    const arrow=chg>=0?"▲":"▼";
+    return `<div class="mkt-chg ${cls}">${arrow} ${sign}${MKT.fmt(chg,2)}%</div>`;
+  },
+
+  mktRow(ico,bgColor,sym,name,price,chgPct){
+    return `<div class="mkt-row">
+      <div class="mkt-left">
+        <div class="mkt-ico" style="background:${bgColor}">${ico}</div>
+        <div><div class="mkt-sym">${sym}</div><div class="mkt-name">${name}</div></div>
+      </div>
+      <div class="mkt-right">
+        <div class="mkt-price">${price}</div>
+        ${MKT.chgHtml(chgPct)}
+      </div>
+    </div>`;
+  },
+
+  render(){
+    const d=MKT.data, f=MKT.fmt.bind(MKT);
+
+    // Top cards
+    const mc=$("mktCards");
+    if(mc) mc.innerHTML=`
+      <div class="card" style="border-top:3px solid #2563eb"><div class="card-tag" style="color:var(--blue)">💵 USD/TRY</div><div class="card-val" style="color:var(--blue)">${d.usdtry?f(d.usdtry):"—"} ₺</div></div>
+      <div class="card" style="border-top:3px solid #7c3aed"><div class="card-tag" style="color:var(--purple)">🇪🇺 EUR/TRY</div><div class="card-val" style="color:var(--purple)">${d.eurtry?f(d.eurtry):"—"} ₺</div></div>
+      <div class="card" style="border-top:3px solid #b5830a"><div class="card-tag" style="color:var(--gold)">🥇 Gram Altın</div><div class="card-val" style="color:var(--gold)">${d.gramAltin?f(d.gramAltin):"—"} ₺</div></div>
+      <div class="card" style="border-top:3px solid #f59e0b"><div class="card-tag" style="color:#92400e">₿ Bitcoin</div><div class="card-val" style="color:#92400e">${d.crypto?.bitcoin?.try?f(d.crypto.bitcoin.try/1000,0)+"K":"—"} ₺</div></div>`;
+
+    // FX
+    const fx=$("fxList");
+    if(fx) fx.innerHTML=[
+      MKT.mktRow("💵","#dbeafe","USD/TRY","Amerikan Doları",d.usdtry?f(d.usdtry)+" ₺":"—",null),
+      MKT.mktRow("🇪🇺","#ede9fe","EUR/TRY","Euro",d.eurtry?f(d.eurtry)+" ₺":"—",null),
+      MKT.mktRow("🇬🇧","#fce7f3","GBP/TRY","İngiliz Sterlini",d.gbptry?f(d.gbptry)+" ₺":"—",null),
+    ].join("");
+
+    // Commodities
+    const cm=$("commodList");
+    if(cm) cm.innerHTML=[
+      MKT.mktRow("🥇","#fef3cd","Gram Altın","XAU/TRY gram",d.gramAltin?f(d.gramAltin)+" ₺":"—",null),
+      MKT.mktRow("🥇","#fef9c3","Ons Altın","XAU/TRY ons",d.xautry?f(d.xautry,0)+" ₺":"—",null),
+    ].join("");
+
+    // Crypto
+    const cr=$("cryptoList");
+    if(cr&&d.crypto) cr.innerHTML=[
+      {id:"bitcoin", sym:"BTC",name:"Bitcoin", ico:"₿", bg:"#fef3cd"},
+      {id:"ethereum",sym:"ETH",name:"Ethereum",ico:"⟠",bg:"#ede9fe"},
+      {id:"solana",  sym:"SOL",name:"Solana",  ico:"◎",bg:"#d1fae5"},
+      {id:"ripple",  sym:"XRP",name:"XRP",     ico:"✕",bg:"#dbeafe"},
+    ].map(c=>{
+      const item=d.crypto[c.id];
+      const pTRY=item?.try;
+      const chg=item?.usd_24h_change;
+      const priceStr=pTRY?(pTRY>=100000?f(pTRY/1000,1)+"K ₺":f(pTRY)+" ₺"):"—";
+      return MKT.mktRow(c.ico,c.bg,c.sym,c.name,priceStr,chg);
+    }).join("");
+
+    // Indices
+    const ix=$("indexList");
+    if(ix){
+      if(d.indices&&d.indices.length){
+        ix.innerHTML=d.indices.map(i=>{
+          const chg=i.prev?((i.price-i.prev)/i.prev)*100:null;
+          return MKT.mktRow("📈","#d1fae5",i.name,i.sym,f(i.price,0),chg);
+        }).join("");
+      } else {
+        ix.innerHTML=`<div class="mkt-loading">Yükleniyor...</div>`;
+      }
+    }
+
+    // Portfolio
+    const pe=$("portfolioMkt");
+    if(pe){
+      if(!S.assets.length){pe.innerHTML=`<div class="mkt-loading">Varlıklar sekmesinden ekle</div>`;}
+      else{
+        let rows=S.assets.map(a=>`<div class="mkt-row"><div class="mkt-left"><div class="mkt-ico" style="background:#ccfbf1">${AI[a.type]||"📦"}</div><div><div class="mkt-sym">${a.name}</div><div class="mkt-name">${a.type}</div></div></div><div class="mkt-right"><div class="mkt-price">${f(a.amount)} <span style="font-size:11px;color:var(--muted)">₺</span></div></div></div>`).join("");
+        const total=S.assets.reduce((s,a)=>s+a.amount,0);
+        rows+=`<div style="padding:10px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Toplam</span><span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:var(--teal)">${f(total)} ₺</span></div>`;
+        pe.innerHTML=rows;
+      }
+      const upd=$("mktLastUpd");
+      if(upd&&MKT.lastUpdate) upd.textContent=MKT.lastUpdate.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+    }
+
+    // Ticker
+    const ti=$("tickerInner");
+    if(ti){
+      const items=[];
+      if(d.usdtry) items.push({sym:"USD/TRY",val:f(d.usdtry),chg:null});
+      if(d.eurtry) items.push({sym:"EUR/TRY",val:f(d.eurtry),chg:null});
+      if(d.gbptry) items.push({sym:"GBP/TRY",val:f(d.gbptry),chg:null});
+      if(d.gramAltin) items.push({sym:"GRAM ALTIN",val:f(d.gramAltin)+" ₺",chg:null});
+      if(d.crypto?.bitcoin) items.push({sym:"BTC",val:f(d.crypto.bitcoin.try/1000,1)+"K ₺",chg:d.crypto.bitcoin.usd_24h_change});
+      if(d.crypto?.ethereum) items.push({sym:"ETH",val:f(d.crypto.ethereum.try)+" ₺",chg:d.crypto.ethereum.usd_24h_change});
+      if(d.indices) d.indices.forEach(i=>{const chg=i.prev?((i.price-i.prev)/i.prev)*100:null;items.push({sym:i.name,val:f(i.price,0),chg});});
+      if(items.length){
+        const html=[...items,...items].map(i=>{
+          const chgSpan=i.chg!=null
+            ? `<span class="t-chg ${i.chg>=0?"t-up":"t-dn"}">${i.chg>=0?"▲":"▼"} ${Math.abs(i.chg).toFixed(2)}%</span>`
+            : "";
+          return `<span class="ticker-item"><span class="t-sym">${i.sym}</span> ${i.val} ${chgSpan}</span>`;
+        }).join("");
+        ti.innerHTML=html;
+        ti.style.animation=`ticker ${Math.max(20,items.length*4)}s linear infinite`;
+      }
+    }
+  }
+};
+
+MKT.fetch();
+setInterval(()=>MKT.fetch(),60000);
+
+// ══════════════════════════════════════════
+// WINDOW.H — all public actions
+// ══════════════════════════════════════════
 window.H = {
-  tab(name,btn){document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));$("tab-"+name).classList.add("active");btn.classList.add("active");render();},
+  tab(name,btn){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    $("tab-"+name).classList.add("active");
+    btn.classList.add("active");
+    render();
+  },
   changeMonth(d){curMonth.setMonth(curMonth.getMonth()+d);render();},
   setQType(t){qType=t;$("qPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");$("qPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");fillSelects();},
   setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");$("fPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");fillSelects();},
@@ -778,21 +1112,22 @@ window.H = {
     const p=form==="quick"
       ?{n:"q_n",a:"q_a",d:"q_d",c:"q_c",note:null,pay:"q_pay",type:qType}
       :{n:"f_n",a:"f_a",d:"f_d",c:"f_c",note:"f_note",pay:"f_pay",type:fType};
-    const name=val(p.n).trim(),amount=num(p.a),date=val(p.d),cat=val(p.c);
+    const name=val(p.n).trim(), amount=num(p.a), date=val(p.d), cat=val(p.c);
     const note=p.note?val(p.note).trim():"";
     const payMethod=val(p.pay)||"";
     if(!name||!amount||!date){toast("Açıklama, tutar ve tarih gerekli","err");return;}
     await setDoc(D("transactions",uid2()),{name,amount,date,type:p.type,category:cat||"other_e",note,payMethod,createdAt:serverTimestamp()});
-    clr(p.n,p.a);if(p.note)clr(p.note);
+    clr(p.n,p.a); if(p.note) clr(p.note);
     toast("Eklendi ✓","ok");
   },
+
   async delTxn(id){await deleteDoc(D("transactions",id));toast("Silindi");},
 
   async addDebt(){
     const name=val("d_name").trim(),amount=num("d_amount"),due=val("d_due"),note=val("d_note").trim();
     if(!name||!amount){toast("Ad ve tutar gerekli","err");return;}
     await setDoc(D("debts",uid2()),{name,amount,due,note,paid:false,createdAt:serverTimestamp()});
-    clr("d_name","d_amount","d_due","d_note");toast("Borç eklendi ✓","ok");
+    clr("d_name","d_amount","d_due","d_note"); toast("Borç eklendi ✓","ok");
   },
   async markDebtPaid(id){const d=S.debts.find(x=>x.id===id);if(!d)return;await setDoc(D("debts",id),{...d,paid:true});toast("Ödendi ✓","ok");},
 
@@ -800,14 +1135,14 @@ window.H = {
     const name=val("i_name").trim(),monthly=num("i_monthly"),remaining=int("i_remaining"),totalAmount=num("i_total"),day=int("i_day");
     if(!name||!monthly||!remaining){toast("Ad, taksit ve adet gerekli","err");return;}
     await setDoc(D("installments",uid2()),{name,monthly,remaining,totalAmount,day,createdAt:serverTimestamp()});
-    clr("i_name","i_monthly","i_remaining","i_total","i_day");toast("Taksit eklendi ✓","ok");
+    clr("i_name","i_monthly","i_remaining","i_total","i_day"); toast("Taksit eklendi ✓","ok");
   },
 
   async addCreditCard(){
     const name=val("cc_name").trim(),limit=num("cc_limit"),balance=num("cc_balance"),statementDay=int("cc_statement"),dueDay=int("cc_due");
     if(!name){toast("Kart adı gerekli","err");return;}
     await setDoc(D("creditCards",uid2()),{name,limit,balance,statementDay,dueDay,createdAt:serverTimestamp()});
-    clr("cc_name","cc_limit","cc_balance","cc_statement","cc_due");toast("Kart eklendi ✓","ok");
+    clr("cc_name","cc_limit","cc_balance","cc_statement","cc_due"); toast("Kart eklendi ✓","ok");
   },
 
   onAssetTypeChange(){
@@ -816,20 +1151,19 @@ window.H = {
     const isUnit=unitTypes.includes(t);
     $("a_unit_row").style.display=isUnit?"block":"none";
     $("a_tl_row").style.display=isUnit?"none":"block";
-    // Set default unit options based on type
-    const unitSel=$("a_unit");
-    if(t==="altin"){unitSel.innerHTML='<option value="gram">Gram</option><option value="ons">Ons</option>';}
-    else if(t==="kripto"){unitSel.innerHTML='<option value="BTC">BTC</option><option value="ETH">ETH</option><option value="SOL">SOL</option><option value="adet">Adet</option>';}
-    else if(t==="doviz"){unitSel.innerHTML='<option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="CHF">CHF</option>';}
-    // Auto-fill TL from live rates when qty changes
-    const qtyInput=$("a_qty");
-    if(qtyInput._listener) qtyInput.removeEventListener("input",qtyInput._listener);
-    qtyInput._listener=()=>window.H.calcAssetTL();
-    qtyInput.addEventListener("input",qtyInput._listener);
-    $("a_unit").addEventListener("change",()=>window.H.calcAssetTL());
+    const us=$("a_unit");
+    if(t==="altin") us.innerHTML='<option value="gram">Gram</option><option value="ons">Ons</option>';
+    else if(t==="kripto") us.innerHTML='<option value="BTC">BTC</option><option value="ETH">ETH</option><option value="SOL">SOL</option>';
+    else us.innerHTML='<option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="CHF">CHF</option>';
+    const qi=$("a_qty");
+    if(qi._l) qi.removeEventListener("input",qi._l);
+    qi._l=()=>window.H.calcAssetTL();
+    qi.addEventListener("input",qi._l);
+    $("a_unit").onchange=()=>window.H.calcAssetTL();
   },
+
   calcAssetTL(){
-    const type=val("a_type"), qty=num("a_qty"), unit=val("a_unit");
+    const type=val("a_type"),qty=num("a_qty"),unit=val("a_unit");
     const d=MKT.data; let tl=null;
     if(type==="altin"){
       if(unit==="gram"&&d.gramAltin) tl=qty*d.gramAltin;
@@ -847,15 +1181,14 @@ window.H = {
       $("a_live_hint").textContent="≈ "+money(tl)+" (canlı kur)";
     }
   },
+
   async addAsset(){
-    const name=val("a_name").trim(), type=val("a_type"), note=val("a_note").trim();
-    const costTL=num("a_cost");
+    const name=val("a_name").trim(),type=val("a_type"),note=val("a_note").trim(),costTL=num("a_cost");
     const unitTypes=["altin","doviz","kripto"];
-    let amount, qty, unit, currentTL;
+    let amount,qty,unit;
     if(unitTypes.includes(type)){
       qty=num("a_qty"); unit=val("a_unit");
-      currentTL=num("a_current_tl");
-      amount=currentTL||qty; // TL equivalent as main amount
+      amount=num("a_current_tl")||qty;
       if(!name||!qty){toast("Ad ve miktar gerekli","err");return;}
     } else {
       amount=num("a_amount");
@@ -868,22 +1201,22 @@ window.H = {
     clr("a_name","a_amount","a_qty","a_current_tl","a_cost","a_note");
     toast("Varlık eklendi ✓","ok");
   },
+
   editAsset(id){
     const a=S.assets.find(x=>x.id===id);if(!a)return;
-    $("a_name").value=a.name;$("a_type").value=a.type;
+    $("a_name").value=a.name; $("a_type").value=a.type;
+    window.H.onAssetTypeChange();
     if(a.qty){$("a_qty").value=a.qty;$("a_unit").value=a.unit||"gram";}
     else $("a_amount").value=a.amount;
-    $("a_cost").value=a.costTL||"";
-    $("a_note").value=a.note||"";
-    window.H.onAssetTypeChange();
-    const btn=$("assetBtn");btn.textContent="Güncelle";
+    $("a_cost").value=a.costTL||""; $("a_note").value=a.note||"";
+    const btn=$("assetBtn"); btn.textContent="Güncelle";
     btn.onclick=async()=>{
       const unitTypes=["altin","doviz","kripto"];
-      let amount=unitTypes.includes(a.type)?num("a_current_tl")||num("a_qty"):num("a_amount");
+      const amount=unitTypes.includes(a.type)?num("a_current_tl")||num("a_qty"):num("a_amount");
       if(!amount){toast("Tutar gerekli","err");return;}
       await setDoc(D("assets",id),{...a,amount,qty:num("a_qty")||null,unit:val("a_unit")||null,costTL:num("a_cost"),note:val("a_note").trim()});
       clr("a_amount","a_qty","a_current_tl","a_cost","a_note");
-      btn.textContent="Kaydet";btn.onclick=()=>window.H.addAsset();
+      btn.textContent="Kaydet"; btn.onclick=()=>window.H.addAsset();
       toast("Güncellendi ✓","ok");
     };
   },
@@ -892,7 +1225,7 @@ window.H = {
     const name=val("g_name").trim(),target=num("g_target"),current=num("g_current"),date=val("g_date"),icon=val("g_icon")||"🎯";
     if(!name||!target){toast("Ad ve hedef tutar gerekli","err");return;}
     await setDoc(D("goals",uid2()),{name,target,current,date,icon,createdAt:serverTimestamp()});
-    clr("g_name","g_target","g_current","g_date","g_icon");toast("Hedef eklendi ✓","ok");
+    clr("g_name","g_target","g_current","g_date","g_icon"); toast("Hedef eklendi ✓","ok");
   },
   addToGoal(id){
     const g=S.goals.find(x=>x.id===id);if(!g)return;
@@ -905,70 +1238,58 @@ window.H = {
     const name=val("s_name").trim(),amount=num("s_amount"),period=val("s_period"),day=int("s_day")||1,icon=val("s_icon")||"📌",cat=val("s_cat");
     if(!name||!amount){toast("Ad ve tutar gerekli","err");return;}
     await setDoc(D("subscriptions",uid2()),{name,amount,period,day,icon,cat,createdAt:serverTimestamp()});
-    clr("s_name","s_amount","s_day","s_icon");toast("Abonelik eklendi ✓","ok");
+    clr("s_name","s_amount","s_day","s_icon"); toast("Abonelik eklendi ✓","ok");
   },
 
-  // ── HİSSE TAKİP ──
   async addStock(){
     let sym=val("st_sym").trim().toUpperCase();
-    const qty=num("st_qty"), cost=num("st_cost");
+    const qty=num("st_qty"),cost=num("st_cost");
     if(!sym){toast("Sembol gerekli","err");return;}
-    // Add .IS suffix for BIST if not present
     if(!sym.includes(".")&&!sym.startsWith("^")) sym=sym+".IS";
     await setDoc(D("stocks",uid2()),{sym,qty,cost,addedAt:serverTimestamp()});
     clr("st_sym","st_qty","st_cost");
-    toast("Hisse eklendi, veri çekiliyor...","ok");
-    setTimeout(()=>window.H.refreshStocks(),500);
+    toast("Eklendi, veri çekiliyor...","ok");
+    setTimeout(()=>window.H.refreshStocks(),600);
   },
+
   async refreshStocks(){
-    const el=document.getElementById("stockList");
-    if(!el||!S.stocks||!S.stocks.length){
+    const el=$("stockList");
+    if(!el||!S.stocks.length){
       if(el) el.innerHTML=`<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Takip listene hisse ekle (THYAO, GARAN...)</div></div>`;
       return;
     }
     el.innerHTML=`<div class="mkt-loading">Veriler çekiliyor...</div>`;
-    const results=await Promise.allSettled(
-      S.stocks.map(s=>
-        fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${s.sym}?interval=1d&range=5d`)
-          .then(r=>r.json())
-          .then(d=>{
-            const q=d?.chart?.result?.[0];
-            if(!q) return{...s,price:null,prev:null,err:true};
-            const meta=q.meta;
-            const price=meta.regularMarketPrice;
-            const prev=meta.chartPreviousClose;
-            const name=meta.shortName||meta.symbol||s.sym;
-            return{...s,price,prev,name};
-          })
-          .catch(()=>({...s,price:null,err:true}))
-      )
-    );
-    const stocks=results.map(r=>r.status==="fulfilled"?r.value:r.reason);
-    const now=new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
-    const upd=document.getElementById("stocksLastUpd");
-    if(upd) upd.textContent="Güncellendi: "+now;
-
-    let totalCost=0, totalNow=0;
+    const results=await Promise.allSettled(S.stocks.map(s=>
+      fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${s.sym}?interval=1d&range=5d`)
+        .then(r=>r.json())
+        .then(d=>{
+          const q=d?.chart?.result?.[0];
+          if(!q) return{...s,price:null,err:true};
+          const meta=q.meta;
+          return{...s,price:meta.regularMarketPrice,prev:meta.chartPreviousClose,name:meta.shortName||s.sym};
+        })
+        .catch(()=>({...s,price:null,err:true}))
+    ));
+    const stocks=results.map(r=>r.status==="fulfilled"?r.value:{...r,price:null,err:true});
+    const upd=$("stocksLastUpd");
+    if(upd) upd.textContent="Güncellendi: "+new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+    let totalCost=0,totalNow=0;
     el.innerHTML=stocks.map(s=>{
-      if(s.err||s.price==null) return`<div class="mkt-row"><div class="mkt-left"><div class="mkt-ico" style="background:var(--paper2)">📊</div><div><div class="mkt-sym">${s.sym}</div><div class="mkt-name" style="color:var(--red)">Veri alınamadı</div></div></div><div class="mkt-right"><button class="del-btn" style="display:block;position:static" onclick="window.H.delDoc('stocks','${s.id}')">✕</button></div></div>`;
+      if(s.err||s.price==null) return`<div class="mkt-row"><div class="mkt-left"><div class="mkt-ico" style="background:var(--paper2);font-size:12px;font-weight:700">${(s.sym||"?").replace(".IS","").slice(0,4)}</div><div><div class="mkt-sym">${(s.sym||"").replace(".IS","")}</div><div class="mkt-name" style="color:var(--red)">Veri alınamadı</div></div></div><div class="mkt-right"><button class="del-btn" style="display:block;position:static" onclick="window.H.delDoc('stocks','${s.id}')">✕</button></div></div>`;
       const chgPct=s.prev?((s.price-s.prev)/s.prev)*100:null;
       const chgStr=chgPct!=null?(chgPct>=0?"▲":"▼")+" "+Math.abs(chgPct).toFixed(2)+"%":"";
       const chgCol=chgPct==null?"var(--muted)":chgPct>=0?"var(--green)":"var(--red)";
-      // P&L
       let plHtml="";
       if(s.qty&&s.cost){
-        const invested=s.qty*s.cost;
-        const current=s.qty*s.price;
-        const pl=current-invested;
+        const invested=s.qty*s.cost,current=s.qty*s.price,pl=current-invested;
         const plPct=(pl/invested)*100;
         totalCost+=invested; totalNow+=current;
         plHtml=`<div style="font-size:11px;color:${pl>=0?"var(--green)":"var(--red)"};font-weight:600">${pl>=0?"+":""}${money(pl)} (%${Math.abs(plPct).toFixed(1)})</div>`;
       }
-      const displayName=(s.name||s.sym).replace(".IS","").replace("BIST","");
-      return`<div class="mkt-row">
+      return `<div class="mkt-row">
         <div class="mkt-left">
-          <div class="mkt-ico" style="background:#d1fae5;color:var(--green);font-size:12px;font-weight:700">${s.sym.replace(".IS","").slice(0,4)}</div>
-          <div><div class="mkt-sym">${s.sym.replace(".IS","")}</div><div class="mkt-name">${displayName}${s.qty?" · "+s.qty+" adet":""}</div></div>
+          <div class="mkt-ico" style="background:#d1fae5;color:var(--green);font-size:12px;font-weight:700">${(s.sym||"").replace(".IS","").slice(0,4)}</div>
+          <div><div class="mkt-sym">${(s.sym||"").replace(".IS","")}</div><div class="mkt-name">${(s.name||s.sym||"").replace(".IS","")}${s.qty?" · "+s.qty+" adet":""}</div></div>
         </div>
         <div class="mkt-right">
           <div style="display:flex;align-items:center;gap:8px">
@@ -978,14 +1299,9 @@ window.H = {
         </div>
       </div>`;
     }).join("");
-    // Total P&L summary
     if(totalCost>0){
-      const pl=totalNow-totalCost;
-      const plPct=(pl/totalCost)*100;
-      el.innerHTML+=`<div style="padding:10px 18px;border-top:2px solid var(--line);display:flex;justify-content:space-between;font-size:13px;background:var(--paper)">
-        <span style="font-weight:600">Toplam P&L</span>
-        <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:${pl>=0?"var(--green)":"var(--red)"}">${pl>=0?"+":""}${money(pl)} (%${plPct.toFixed(1)})</span>
-      </div>`;
+      const pl=totalNow-totalCost,plPct=(pl/totalCost)*100;
+      el.innerHTML+=`<div style="padding:10px 18px;border-top:2px solid var(--line);display:flex;justify-content:space-between;font-size:13px;background:var(--paper)"><span style="font-weight:600">Toplam P&L</span><span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:${pl>=0?"var(--green)":"var(--red)"}">${pl>=0?"+":""}${money(pl)} (%${plPct.toFixed(1)})</span></div>`;
     }
   },
 
@@ -993,7 +1309,7 @@ window.H = {
     const cat=val("b_c"),amt=num("b_a");
     if(!cat||!amt){toast("Kategori ve limit gerekli","err");return;}
     await setDoc(META("budgets"),{data:{...S.budgets,[cat]:amt}});
-    clr("b_a");toast("Bütçe kaydedildi ✓","ok");
+    clr("b_a"); toast("Bütçe kaydedildi ✓","ok");
   },
 
   async addCat(){
@@ -1001,309 +1317,36 @@ window.H = {
     if(!name){toast("Kategori adı gerekli","err");return;}
     const id=name.toLowerCase().replace(/[^a-z0-9]/g,"_")+"_"+uid2();
     await setDoc(D("categories",id),{name,icon,type});
-    clr("nc_name","nc_icon");toast("Kategori eklendi ✓","ok");
+    clr("nc_name","nc_icon"); toast("Kategori eklendi ✓","ok");
   },
   async deleteCat(id){await deleteDoc(D("categories",id));toast("Silindi");},
 
-  async delDoc(col,id){await deleteDoc(D(col,id));toast("Silindi");},
+  async delDoc(colName,id){
+    const cols={debts:"debts",installments:"installments",creditCards:"creditCards",assets:"assets",goals:"goals",subscriptions:"subscriptions",stocks:"stocks"};
+    if(!cols[colName])return;
+    await deleteDoc(D(cols[colName],id));
+    toast("Silindi");
+  },
 
   async clearMonth(){
     if(!confirm("Bu ayın tüm işlemleri silinecek?"))return;
-    const b=writeBatch(db);monthTxns().forEach(t=>b.delete(D("transactions",t.id)));await b.commit();toast("Temizlendi","ok");
+    const b=writeBatch(db);
+    monthTxns().forEach(t=>b.delete(D("transactions",t.id)));
+    await b.commit(); toast("Temizlendi","ok");
   },
+
   exportData(){
     const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
-    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="finansal_hub.json";a.click();
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="finansal_hub.json"; a.click();
   }
 };
 
+// Init
 const today2=new Date().toISOString().split("T")[0];
 ["q_d","f_d"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
 window.addEventListener("resize",()=>rChart());
-// ══════════════════════════════════════════
-// MARKET DATA
-// ══════════════════════════════════════════
-const MKT = {
-  data: {},
-  lastUpdate: null,
-
-  async fetch() {
-    // Use multiple free APIs with CORS proxy fallback
-    try {
-      await Promise.allSettled([
-        MKT.fetchFX(),
-        MKT.fetchCrypto(),
-        MKT.fetchBIST(),
-      ]);
-      MKT.lastUpdate = new Date();
-      MKT.render();
-    } catch(e) {
-      console.warn("Market fetch error:", e);
-    }
-  },
-
-  // ExchangeRate-API (free, no key needed for basic)
-  async fetchFX() {
-    const r = await fetch("https://open.er-api.com/v6/latest/USD");
-    const d = await r.json();
-    if (!d.rates) return;
-    const usdTry = d.rates.TRY;
-    const eurTry = d.rates.TRY / d.rates.EUR;
-    const gbpTry = d.rates.TRY / d.rates.GBP;
-    // Gold in USD/oz from a free endpoint
-    let goldOz = null, goldGram = null;
-    try {
-      const gr = await fetch("https://open.er-api.com/v6/latest/XAU");
-      const gd = await gr.json();
-      if (gd.rates && gd.rates.TRY) {
-        goldOz   = gd.rates.TRY;           // 1 ons = X TL
-        goldGram = gd.rates.TRY / 31.1035; // gram altın TL
-      }
-    } catch(e) {}
-
-    MKT.data.usdtry = usdTry;
-    MKT.data.eurtry = eurTry;
-    MKT.data.gbptry = gbpTry;
-    MKT.data.xautry = goldOz;
-    MKT.data.gramAltin = goldGram;
-
-    // Store previous for change calc (session only)
-    if (!MKT.prev) MKT.prev = {};
-  },
-
-  // CoinGecko (free, no key)
-  async fetchCrypto() {
-    const r = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple&vs_currencies=usd,try&include_24hr_change=true"
-    );
-    const d = await r.json();
-    MKT.data.crypto = d;
-  },
-
-  // BIST via Yahoo Finance proxy
-  async fetchBIST() {
-    const symbols = ["XU100.IS", "XU030.IS"];
-    const results = await Promise.allSettled(
-      symbols.map(sym =>
-        fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`)
-          .then(r => r.json())
-          .then(d => {
-            const q = d?.chart?.result?.[0];
-            if (!q) return null;
-            const meta = q.meta;
-            return {
-              sym,
-              price: meta.regularMarketPrice,
-              prev:  meta.chartPreviousClose,
-              name:  sym === "XU100.IS" ? "BIST 100" : "BIST 30"
-            };
-          })
-      )
-    );
-    MKT.data.indices = results
-      .filter(r => r.status === "fulfilled" && r.value)
-      .map(r => r.value);
-  },
-
-  fmt(n, dec=2) {
-    if (n == null) return "—";
-    return (+n).toLocaleString("tr-TR", {minimumFractionDigits:dec, maximumFractionDigits:dec});
-  },
-
-  chgHtml(chg) {
-    if (chg == null) return "";
-    const sign = chg >= 0 ? "+" : "";
-    const cls  = chg >= 0 ? "chg-up" : "chg-dn";
-    const arrow = chg >= 0 ? "▲" : "▼";
-    return `<div class="mkt-chg ${cls}">${arrow} ${sign}${MKT.fmt(chg, 2)}%</div>`;
-  },
-
-  mktRow(ico, bgColor, sym, name, price, chgPct, unit="") {
-    return `<div class="mkt-row">
-      <div class="mkt-left">
-        <div class="mkt-ico" style="background:${bgColor}">${ico}</div>
-        <div><div class="mkt-sym">${sym}</div><div class="mkt-name">${name}</div></div>
-      </div>
-      <div class="mkt-right">
-        <div class="mkt-price">${price}${unit ? ' <span style="font-size:11px;font-weight:400;color:var(--muted)">'+unit+'</span>' : ''}</div>
-        ${MKT.chgHtml(chgPct)}
-      </div>
-    </div>`;
-  },
-
-  render() {
-    const d = MKT.data;
-    const fmt = MKT.fmt;
-    const chg = MKT.chgHtml.bind(MKT);
-
-    // ── Top Cards ──
-    const mktCards = document.getElementById("mktCards");
-    if (mktCards) {
-      const usd = d.usdtry;
-      const eur = d.eurtry;
-      const gram = d.gramAltin;
-      const btc = d.crypto?.bitcoin?.try;
-      mktCards.innerHTML = `
-        <div class="card" style="border-top:3px solid #2563eb">
-          <div class="card-tag" style="color:var(--blue)">💵 USD/TRY</div>
-          <div class="card-val" style="color:var(--blue)">${usd ? fmt(usd) : "—"} ₺</div>
-        </div>
-        <div class="card" style="border-top:3px solid #7c3aed">
-          <div class="card-tag" style="color:var(--purple)">🇪🇺 EUR/TRY</div>
-          <div class="card-val" style="color:var(--purple)">${eur ? fmt(eur) : "—"} ₺</div>
-        </div>
-        <div class="card" style="border-top:3px solid #b5830a">
-          <div class="card-tag" style="color:var(--gold)">🥇 Gram Altın</div>
-          <div class="card-val" style="color:var(--gold)">${gram ? fmt(gram) : "—"} ₺</div>
-        </div>
-        <div class="card" style="border-top:3px solid #f59e0b">
-          <div class="card-tag" style="color:#92400e">₿ Bitcoin (TL)</div>
-          <div class="card-val" style="color:#92400e">${btc ? fmt(btc/1000,0)+"K" : "—"} ₺</div>
-        </div>`;
-    }
-
-    // ── FX List ──
-    const fxEl = document.getElementById("fxList");
-    if (fxEl) {
-      fxEl.innerHTML = [
-        MKT.mktRow("💵","#dbeafe","USD/TRY","Amerikan Doları", d.usdtry ? fmt(d.usdtry)+" ₺":"—", null),
-        MKT.mktRow("🇪🇺","#ede9fe","EUR/TRY","Euro",            d.eurtry ? fmt(d.eurtry)+" ₺":"—", null),
-        MKT.mktRow("🇬🇧","#fce7f3","GBP/TRY","İngiliz Sterlini",d.gbptry ? fmt(d.gbptry)+" ₺":"—", null),
-      ].join("");
-      const fxTime = document.getElementById("fxTime");
-      if (fxTime && MKT.lastUpdate) fxTime.textContent = MKT.lastUpdate.toLocaleTimeString("tr-TR", {hour:"2-digit",minute:"2-digit"});
-    }
-
-    // ── Commodities ──
-    const commEl = document.getElementById("commodList");
-    if (commEl) {
-      const ons = d.xautry;
-      const gram = d.gramAltin;
-      commEl.innerHTML = [
-        MKT.mktRow("🥇","#fef3cd","Gram Altın","XAU/TRY gram", gram ? fmt(gram)+" ₺":"—", null),
-        MKT.mktRow("🥇","#fef9c3","ONS Altın", "XAU/TRY ons",  ons  ? fmt(ons,0)+" ₺":"—", null),
-        MKT.mktRow("🥈","#f1f5f9","Gümüş",     "XAG (yaklaşık)",gram ? fmt(gram/80,2)+" ₺":"—", null),
-      ].join("");
-    }
-
-    // ── Crypto ──
-    const cryptoEl = document.getElementById("cryptoList");
-    if (cryptoEl && d.crypto) {
-      const list = [
-        {id:"bitcoin",  sym:"BTC", name:"Bitcoin",  ico:"₿",  bg:"#fef3cd"},
-        {id:"ethereum", sym:"ETH", name:"Ethereum", ico:"⟠",  bg:"#ede9fe"},
-        {id:"solana",   sym:"SOL", name:"Solana",   ico:"◎",  bg:"#d1fae5"},
-        {id:"ripple",   sym:"XRP", name:"XRP",      ico:"✕",  bg:"#dbeafe"},
-      ];
-      cryptoEl.innerHTML = list.map(c => {
-        const item = d.crypto[c.id];
-        const priceTRY = item?.try;
-        const chg24 = item?.usd_24h_change;
-        const priceStr = priceTRY
-          ? (priceTRY >= 100000 ? fmt(priceTRY/1000,1)+"K ₺" : fmt(priceTRY)+" ₺")
-          : "—";
-        return MKT.mktRow(c.ico, c.bg, c.sym, c.name, priceStr, chg24);
-      }).join("");
-    }
-
-    // ── Indices ──
-    const idxEl = document.getElementById("indexList");
-    if (idxEl) {
-      if (d.indices && d.indices.length) {
-        idxEl.innerHTML = d.indices.map(ix => {
-          const chgPct = ix.prev ? ((ix.price - ix.prev) / ix.prev) * 100 : null;
-          return MKT.mktRow("📈","#d1fae5", ix.name, ix.sym, fmt(ix.price,0), chgPct);
-        }).join("");
-      } else {
-        idxEl.innerHTML = `<div class="mkt-loading">Yükleniyor...</div>`;
-      }
-    }
-
-    // ── Portfolio in TL ──
-    const portEl = document.getElementById("portfolioMkt");
-    if (portEl) {
-      const assets = S.assets;
-      if (!assets.length) {
-        portEl.innerHTML = `<div class="mkt-loading">Varlıklar sekmesinden varlık ekle</div>`;
-      } else {
-        let rows = assets.map(a => {
-          // For gold assets, show estimated TL value using live gram price
-          let liveVal = null;
-          if ((a.type === "altin" || a.name.toLowerCase().includes("altın")) && d.gramAltin) {
-            // If stored in grams, multiply; if stored in TL just show
-            liveVal = a.amount; // already in TL
-          } else if (a.type === "kripto" && a.name.toLowerCase().includes("btc") && d.crypto?.bitcoin?.try) {
-            liveVal = a.amount; // stored in TL
-          } else {
-            liveVal = a.amount;
-          }
-          const ico = {nakit:"💵",birikim:"🏦",altin:"🥇",hisse:"📈",kripto:"🔷",gayrimenkul:"🏠",diger:"📦"}[a.type]||"📦";
-          return `<div class="mkt-row">
-            <div class="mkt-left">
-              <div class="mkt-ico" style="background:#ccfbf1">${ico}</div>
-              <div><div class="mkt-sym">${a.name}</div><div class="mkt-name">${a.type}</div></div>
-            </div>
-            <div class="mkt-right">
-              <div class="mkt-price">${fmt(liveVal)} <span style="font-size:11px;color:var(--muted)">₺</span></div>
-            </div>
-          </div>`;
-        }).join("");
-        const total = assets.reduce((s,a)=>s+a.amount,0);
-        rows += `<div style="padding:10px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:13px">
-          <span style="color:var(--muted)">Toplam</span>
-          <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:var(--teal)">${fmt(total)} ₺</span>
-        </div>`;
-        portEl.innerHTML = rows;
-      }
-      const updEl = document.getElementById("mktLastUpd");
-      if (updEl && MKT.lastUpdate) updEl.textContent = MKT.lastUpdate.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
-    }
-
-    // ── Ticker bar ──
-    const tickerInner = document.getElementById("tickerInner");
-    if (tickerInner) {
-      const items = [];
-      if (d.usdtry) items.push({sym:"USD/TRY", val:fmt(d.usdtry), chg:null});
-      if (d.eurtry) items.push({sym:"EUR/TRY", val:fmt(d.eurtry), chg:null});
-      if (d.gbptry) items.push({sym:"GBP/TRY", val:fmt(d.gbptry), chg:null});
-      if (d.gramAltin) items.push({sym:"GRAM ALTIN", val:fmt(d.gramAltin)+" ₺", chg:null});
-      if (d.xautry) items.push({sym:"ONS ALTIN", val:fmt(d.xautry,0)+" ₺", chg:null});
-      if (d.crypto?.bitcoin) {
-        const btc = d.crypto.bitcoin;
-        items.push({sym:"BTC", val:fmt(btc.try/1000,1)+"K ₺", chg:btc.usd_24h_change});
-      }
-      if (d.crypto?.ethereum) {
-        const eth = d.crypto.ethereum;
-        items.push({sym:"ETH", val:fmt(eth.try)+" ₺", chg:eth.usd_24h_change});
-      }
-      if (d.indices) d.indices.forEach(ix => {
-        const chgPct = ix.prev ? ((ix.price-ix.prev)/ix.prev)*100 : null;
-        items.push({sym:ix.name, val:fmt(ix.price,0), chg:chgPct});
-      });
-
-      if (items.length) {
-        // Duplicate for seamless loop
-        const html = [...items, ...items].map(i => {
-          const chgStr = i.chg != null
-            ? `<span class="t-chg ${i.chg>=0?"t-up":"t-dn"}>${i.chg>=0?"▲":"▼"} ${Math.abs(i.chg).toFixed(2)}%</span>`
-            : "";
-          return `<span class="ticker-item"><span class="t-sym">${i.sym}</span> ${i.val} ${chgStr}</span>`;
-        }).join("");
-        tickerInner.innerHTML = html;
-        // Adjust animation speed based on item count
-        const dur = Math.max(20, items.length * 4);
-        tickerInner.style.animation = `ticker ${dur}s linear infinite`;
-      }
-    }
-  }
-};
-
-// Start fetching market data
-MKT.fetch();
-// Refresh every 60 seconds
-setInterval(() => MKT.fetch(), 60000);
-
 initData();
 </script>
+
 </body>
 </html>
