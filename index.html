@@ -124,6 +124,27 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 #toast.err{background:var(--red)}
 @media(max-width:900px){.cols{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}.stat-grid{grid-template-columns:1fr}}
 @media(max-width:520px){.cards{grid-template-columns:1fr}.r4{grid-template-columns:1fr 1fr}}
+
+/* ── TICKER ── */
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-item{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:rgba(255,255,255,.85);flex-shrink:0}
+.ticker-item .t-sym{color:rgba(255,255,255,.45);font-size:11px}
+.ticker-item .t-chg{font-size:11px;font-weight:600}
+.t-up{color:#7ec8a0}.t-dn{color:#f87171}
+
+/* ── MARKET ROW ── */
+.mkt-row{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid var(--line);transition:background .1s}
+.mkt-row:last-child{border-bottom:none}
+.mkt-row:hover{background:var(--paper)}
+.mkt-left{display:flex;align-items:center;gap:10px}
+.mkt-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.mkt-sym{font-size:13px;font-weight:600}
+.mkt-name{font-size:11px;color:var(--muted)}
+.mkt-right{text-align:right}
+.mkt-price{font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.3px}
+.mkt-chg{font-size:11.5px;font-weight:600;margin-top:1px}
+.chg-up{color:var(--green)}.chg-dn{color:var(--red)}
+.mkt-loading{padding:24px;text-align:center;color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
@@ -140,7 +161,8 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 
 <div class="wrapper">
   <div class="tabs">
-    <button class="tab active"  onclick="window.H.tab('ozet',this)">📊 Özet</button>
+    <button class="tab active"  onclick="window.H.tab('piyasa',this)">🌍 Piyasa</button>
+    <button class="tab" onclick="window.H.tab('ozet',this)">📊 Özet</button>
     <button class="tab" onclick="window.H.tab('islemler',this)">💳 İşlemler</button>
     <button class="tab" onclick="window.H.tab('borclar',this)">💸 Borçlar</button>
     <button class="tab" onclick="window.H.tab('varliklar',this)">🏦 Varlıklar</button>
@@ -151,8 +173,75 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
     <button class="tab" onclick="window.H.tab('ayarlar',this)">⚙️ Ayarlar</button>
   </div>
 
+  <!-- PİYASA -->
+  <div id="tab-piyasa" class="page active">
+
+    <!-- Ticker bar -->
+    <div id="tickerBar" style="background:var(--ink);border-radius:var(--r);padding:0 20px;margin-bottom:20px;height:44px;display:flex;align-items:center;gap:0;overflow:hidden;box-shadow:var(--shadow-lg)">
+      <div id="tickerInner" style="display:flex;gap:32px;animation:ticker 30s linear infinite;white-space:nowrap">
+        <span style="color:var(--muted);font-size:12px">Yükleniyor...</span>
+      </div>
+    </div>
+
+    <!-- Piyasa kartları -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px" id="mktCards"></div>
+
+    <!-- 3 panel row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px">
+      <!-- Döviz -->
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-head"><div class="panel-title">💱 Döviz Kurları</div><span id="fxTime" style="font-size:11px;color:var(--muted)"></span></div>
+        <div id="fxList"></div>
+      </div>
+      <!-- Emtia -->
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-head"><div class="panel-title">🥇 Emtia</div></div>
+        <div id="commodList"></div>
+      </div>
+      <!-- Kripto -->
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-head"><div class="panel-title">🔷 Kripto</div></div>
+        <div id="cryptoList"></div>
+      </div>
+    </div>
+
+    <!-- Borsa + Kendi portföy -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-head"><div class="panel-title">📈 Endeksler</div></div>
+        <div id="indexList"></div>
+      </div>
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-head">
+          <div class="panel-title">💼 Varlıklarım (TL Değer)</div>
+          <span id="mktLastUpd" style="font-size:11px;color:var(--muted)"></span>
+        </div>
+        <div id="portfolioMkt"></div>
+      </div>
+    </div>
+
+    <!-- Hisse Takip -->
+    <div class="panel" style="margin-bottom:0">
+      <div class="panel-head">
+        <div class="panel-title">📊 Hisse Takip Listem</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="stocksLastUpd" style="font-size:11px;color:var(--muted)"></span>
+          <button class="btn-sm" onclick="window.H.refreshStocks()">↺ Güncelle</button>
+        </div>
+      </div>
+      <!-- Hisse ekle satırı -->
+      <div style="padding:10px 18px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;background:var(--paper)">
+        <div class="field" style="margin:0;flex:1;min-width:100px"><label>Sembol</label><input id="st_sym" placeholder="Örn: THYAO, GARAN" style="text-transform:uppercase"></div>
+        <div class="field" style="margin:0;flex:1;min-width:80px"><label>Adet</label><input id="st_qty" type="number" placeholder="0" min="0"></div>
+        <div class="field" style="margin:0;flex:1;min-width:80px"><label>Alış Fiyatı ₺</label><input id="st_cost" type="number" placeholder="0.00"></div>
+        <button class="btn-add" style="width:auto;padding:9px 16px;margin:0;align-self:flex-end" onclick="window.H.addStock()">Ekle</button>
+      </div>
+      <div id="stockList"></div>
+    </div>
+  </div>
+
   <!-- ÖZET -->
-  <div id="tab-ozet" class="page active">
+  <div id="tab-ozet" class="page">
     <div style="background:white;border:1px solid var(--line);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
       <div><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px">Net Servet</div><div id="netWorthVal" style="font-family:'Bricolage Grotesque',sans-serif;font-size:28px;font-weight:800;letter-spacing:-1px">—</div></div>
       <div style="display:flex;gap:20px;flex-wrap:wrap" id="netWorthBreakdown"></div>
@@ -182,6 +271,16 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
             <div class="field"><label>Tarih</label><input id="q_d" type="date"></div>
           </div>
           <div class="field"><label>Kategori</label><select id="q_c"></select></div>
+          <div class="field"><label>Ödeme Yöntemi</label>
+            <select id="q_pay">
+              <option value="">Seç...</option>
+              <option value="nakit">💵 Nakit</option>
+              <option value="kredi">💳 Kredi Kartı</option>
+              <option value="banka">🏦 Banka Kartı / Havale</option>
+              <option value="dijital">📱 Dijital Cüzdan</option>
+              <option value="otomatik">🔄 Otomatik Ödeme</option>
+            </select>
+          </div>
           <button class="btn-add" onclick="window.H.addTxn('quick')">Ekle</button>
         </div>
         <div class="panel">
@@ -210,8 +309,9 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
         <div class="field"><label>Tarih</label><input id="f_d" type="date"></div>
         <div class="field"><label>Kategori</label><select id="f_c"></select></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr auto;gap:9px;max-width:480px;align-items:flex-end">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:9px;max-width:640px;align-items:flex-end">
         <div class="field" style="margin:0"><label>Not</label><input id="f_note" placeholder="İsteğe bağlı..."></div>
+        <div class="field" style="margin:0"><label>Ödeme Yöntemi</label><select id="f_pay" style="background:var(--paper)"><option value="">Seç...</option><option value="nakit">💵 Nakit</option><option value="kredi">💳 Kredi Kartı</option><option value="banka">🏦 Banka Kartı</option><option value="dijital">📱 Dijital Cüzdan</option><option value="otomatik">🔄 Otomatik</option></select></div>
         <button class="btn-add" style="width:110px;margin:0" onclick="window.H.addTxn('full')">Ekle</button>
       </div>
     </div>
@@ -284,17 +384,43 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
         <div class="form-title">Varlık Ekle / Güncelle</div>
         <div class="field"><label>Adı</label><input id="a_name" placeholder="Örn: Garanti Birikimli"></div>
         <div class="field"><label>Tür</label>
-          <select id="a_type">
-            <option value="nakit">💵 Nakit</option>
-            <option value="birikim">🏦 Birikim / Mevduat</option>
-            <option value="altin">🥇 Altın / Döviz</option>
-            <option value="hisse">📈 Hisse / Fon</option>
-            <option value="kripto">🔷 Kripto</option>
-            <option value="gayrimenkul">🏠 Gayrimenkul</option>
-            <option value="diger">📦 Diğer</option>
+          <select id="a_type" onchange="window.H.onAssetTypeChange()">
+            <option value="nakit">💵 Nakit (TL)</option>
+            <option value="birikim">🏦 Birikim / Mevduat (TL)</option>
+            <option value="altin">🥇 Altın</option>
+            <option value="doviz">💱 Döviz</option>
+            <option value="hisse">📈 Hisse / Fon (TL)</option>
+            <option value="kripto">🔷 Kripto (USD)</option>
+            <option value="gayrimenkul">🏠 Gayrimenkul (TL)</option>
+            <option value="diger">📦 Diğer (TL)</option>
           </select>
         </div>
-        <div class="field"><label>Tutar ₺</label><input id="a_amount" type="number" placeholder="0"></div>
+        <!-- Dinamik birim alanı -->
+        <div id="a_unit_row" style="display:none">
+          <div class="r2">
+            <div class="field"><label id="a_qty_label">Miktar</label><input id="a_qty" type="number" placeholder="0" step="any"></div>
+            <div class="field"><label>Birim</label>
+              <select id="a_unit">
+                <option value="gram">Gram (altın)</option>
+                <option value="ons">Ons (altın)</option>
+                <option value="adet">Adet</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="CHF">CHF</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Güncel Değer (TL) <span id="a_live_hint" style="color:var(--green);font-weight:700"></span></label>
+            <input id="a_current_tl" type="number" placeholder="Canlı kurdan otomatik hesaplanır" step="any">
+          </div>
+        </div>
+        <!-- TL direkt giriş (nakit, birikim, hisse...) -->
+        <div id="a_tl_row">
+          <div class="field"><label>Tutar (TL)</label><input id="a_amount" type="number" placeholder="0"></div>
+        </div>
+        <div class="field"><label>Alış Maliyeti (TL) — isteğe bağlı</label><input id="a_cost" type="number" placeholder="Alış günündeki TL değeri"></div>
         <div class="field"><label>Not</label><input id="a_note" placeholder="İsteğe bağlı..."></div>
         <button class="btn-add" id="assetBtn" onclick="window.H.addAsset()">Kaydet</button>
       </div>
@@ -428,7 +554,7 @@ const DEFAULT_CATS = [
   {id:"other_i",name:"Diğer Gelir",icon:"✨",type:"inc"}
 ];
 
-const S = { transactions:[], categories:[...DEFAULT_CATS], budgets:{}, debts:[], installments:[], creditCards:[], assets:[], goals:[], subscriptions:[] };
+const S = { transactions:[], categories:[...DEFAULT_CATS], budgets:{}, debts:[], installments:[], creditCards:[], assets:[], goals:[], subscriptions:[], stocks:[] };
 let curMonth = new Date(); curMonth.setDate(1);
 let qType="exp", fType="exp";
 
@@ -473,6 +599,13 @@ async function initData(){
   onSnapshot(P("assets"),        s=>{S.assets        =s.docs.map(d=>({id:d.id,...d.data()}));render();});
   onSnapshot(P("goals"),         s=>{S.goals         =s.docs.map(d=>({id:d.id,...d.data()}));render();});
   onSnapshot(P("subscriptions"), s=>{S.subscriptions =s.docs.map(d=>({id:d.id,...d.data()}));render();});
+  onSnapshot(P("stocks"),        s=>{S.stocks        =s.docs.map(d=>({id:d.id,...d.data()}));
+    // Refresh stock prices once per day (check localStorage for last fetch date)
+    const today=new Date().toDateString();
+    const lastFetch=localStorage.getItem("stocks_fetched");
+    if(lastFetch!==today){localStorage.setItem("stocks_fetched",today);setTimeout(()=>window.H.refreshStocks(),2000);}
+    else{setTimeout(()=>window.H.refreshStocks(),500);}
+  });
 }
 
 function render(){
@@ -508,11 +641,14 @@ function rCards(){
     <div class="card c-gold"><div class="card-tag">⭐ Tasarruf</div><div class="card-val">%${pct}</div><div class="card-sub">gelirin %${pct}'i</div></div>`;
 }
 
+const PAY_ICO={"nakit":"💵","kredi":"💳","banka":"🏦","dijital":"📱","otomatik":"🔄"};
+const PAY_LBL={"nakit":"Nakit","kredi":"Kredi Kartı","banka":"Banka","dijital":"Dijital","otomatik":"Otomatik"};
 function txnRow(t){
   const c=getCat(t.category),col=gc(t.category);
+  const payBadge=t.payMethod?`<span style="font-size:10px;background:var(--paper2);border-radius:4px;padding:1px 5px;color:var(--muted);margin-left:4px">${PAY_ICO[t.payMethod]||""} ${PAY_LBL[t.payMethod]||t.payMethod}</span>`:"";
   return `<div class="txn">
     <div class="txn-ico" style="background:${col}20;color:${col}">${c.icon}</div>
-    <div><div class="txn-name">${t.name}</div><div class="txn-cat">${c.name}${t.note?" · "+t.note:""}</div></div>
+    <div><div class="txn-name">${t.name}${payBadge}</div><div class="txn-cat">${c.name}${t.note?" · "+t.note:""}</div></div>
     <div class="txn-date">${new Date(t.date).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})}</div>
     <div class="txn-amt ${t.type}">${t.type==="inc"?"+":"−"}${money(t.amount)}<button class="del-btn" onclick="window.H.delTxn('${t.id}')">✕</button></div>
   </div>`;
@@ -588,7 +724,13 @@ function rAssets(){
   const bt={};S.assets.forEach(a=>{bt[a.type]=(bt[a.type]||0)+a.amount;});
   const topTypes=Object.entries(bt).sort((a,b)=>b[1]-a[1]).slice(0,3);
   ac.innerHTML=`<div class="card c-teal"><div class="card-tag">🏦 Toplam Varlık</div><div class="card-val" style="color:var(--teal)">${money(total)}</div><div class="card-sub">${S.assets.length} kalem</div></div>${topTypes.map(([t,a])=>`<div class="card"><div class="card-tag">${AI[t]||"📦"} ${t}</div><div class="card-val" style="color:var(--teal)">${money(a)}</div></div>`).join("")}`;
-  al.innerHTML=S.assets.length?S.assets.map(a=>`<div class="g-row"><div class="g-row-left"><div class="g-row-title">${AI[a.type]||"📦"} ${a.name}</div><div class="g-row-sub">${a.type}${a.note?" · "+a.note:""}</div></div><div class="g-row-right"><div class="g-row-val" style="color:var(--teal)">${money(a.amount)}</div><div style="display:flex;justify-content:flex-end;margin-top:4px;gap:5px"><button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.editAsset('${a.id}')">Güncelle</button><button class="del-btn" style="display:block" onclick="window.H.delDoc('assets','${a.id}')">✕</button></div></div></div>`).join(""):`<div class="empty"><div class="empty-icon">🏦</div><div class="empty-text">Varlık eklenmedi</div></div>`;
+  al.innerHTML=S.assets.length?S.assets.map(a=>{
+    const unitStr=a.qty?`${a.qty} ${a.unit||""} · `:"";
+    const costStr=a.costTL?` · Alış: ${money(a.costTL)}`:"";
+    const gainStr=(a.costTL&&a.amount)?((a.amount-a.costTL)/a.costTL*100).toFixed(1):"";
+    const gainBadge=gainStr?`<span style="font-size:11px;font-weight:600;color:${+gainStr>=0?"var(--green)":"var(--red)"}">${+gainStr>=0?"▲":"▼"}%${Math.abs(gainStr)}</span>`:"";
+    return`<div class="g-row"><div class="g-row-left"><div class="g-row-title">${AI[a.type]||"📦"} ${a.name}</div><div class="g-row-sub">${unitStr}${a.type}${a.note?" · "+a.note:""}${costStr}</div></div><div class="g-row-right"><div class="g-row-val" style="color:var(--teal);display:flex;align-items:center;gap:6px">${money(a.amount)} ${gainBadge}</div><div style="display:flex;justify-content:flex-end;margin-top:4px;gap:5px"><button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.editAsset('${a.id}')">Güncelle</button><button class="del-btn" style="display:block" onclick="window.H.delDoc('assets','${a.id}')">✕</button></div></div></div>`;
+  }).join(""):`<div class="empty"><div class="empty-icon">🏦</div><div class="empty-text">Varlık eklenmedi</div></div>`;
 }
 
 function rGoals(){
@@ -633,10 +775,14 @@ window.H = {
   renderTxns:rTxns,
 
   async addTxn(form){
-    const p=form==="quick"?{n:"q_n",a:"q_a",d:"q_d",c:"q_c",note:null,type:qType}:{n:"f_n",a:"f_a",d:"f_d",c:"f_c",note:"f_note",type:fType};
-    const name=val(p.n).trim(),amount=num(p.a),date=val(p.d),cat=val(p.c),note=p.note?val(p.note).trim():"";
+    const p=form==="quick"
+      ?{n:"q_n",a:"q_a",d:"q_d",c:"q_c",note:null,pay:"q_pay",type:qType}
+      :{n:"f_n",a:"f_a",d:"f_d",c:"f_c",note:"f_note",pay:"f_pay",type:fType};
+    const name=val(p.n).trim(),amount=num(p.a),date=val(p.d),cat=val(p.c);
+    const note=p.note?val(p.note).trim():"";
+    const payMethod=val(p.pay)||"";
     if(!name||!amount||!date){toast("Açıklama, tutar ve tarih gerekli","err");return;}
-    await setDoc(D("transactions",uid2()),{name,amount,date,type:p.type,category:cat||"other_e",note,createdAt:serverTimestamp()});
+    await setDoc(D("transactions",uid2()),{name,amount,date,type:p.type,category:cat||"other_e",note,payMethod,createdAt:serverTimestamp()});
     clr(p.n,p.a);if(p.note)clr(p.note);
     toast("Eklendi ✓","ok");
   },
@@ -664,20 +810,80 @@ window.H = {
     clr("cc_name","cc_limit","cc_balance","cc_statement","cc_due");toast("Kart eklendi ✓","ok");
   },
 
+  onAssetTypeChange(){
+    const t=val("a_type");
+    const unitTypes=["altin","doviz","kripto"];
+    const isUnit=unitTypes.includes(t);
+    $("a_unit_row").style.display=isUnit?"block":"none";
+    $("a_tl_row").style.display=isUnit?"none":"block";
+    // Set default unit options based on type
+    const unitSel=$("a_unit");
+    if(t==="altin"){unitSel.innerHTML='<option value="gram">Gram</option><option value="ons">Ons</option>';}
+    else if(t==="kripto"){unitSel.innerHTML='<option value="BTC">BTC</option><option value="ETH">ETH</option><option value="SOL">SOL</option><option value="adet">Adet</option>';}
+    else if(t==="doviz"){unitSel.innerHTML='<option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="CHF">CHF</option>';}
+    // Auto-fill TL from live rates when qty changes
+    const qtyInput=$("a_qty");
+    if(qtyInput._listener) qtyInput.removeEventListener("input",qtyInput._listener);
+    qtyInput._listener=()=>window.H.calcAssetTL();
+    qtyInput.addEventListener("input",qtyInput._listener);
+    $("a_unit").addEventListener("change",()=>window.H.calcAssetTL());
+  },
+  calcAssetTL(){
+    const type=val("a_type"), qty=num("a_qty"), unit=val("a_unit");
+    const d=MKT.data; let tl=null;
+    if(type==="altin"){
+      if(unit==="gram"&&d.gramAltin) tl=qty*d.gramAltin;
+      else if(unit==="ons"&&d.xautry) tl=qty*d.xautry;
+    } else if(type==="doviz"){
+      if(unit==="USD"&&d.usdtry) tl=qty*d.usdtry;
+      else if(unit==="EUR"&&d.eurtry) tl=qty*d.eurtry;
+      else if(unit==="GBP"&&d.gbptry) tl=qty*d.gbptry;
+    } else if(type==="kripto"&&d.crypto){
+      if(unit==="BTC"&&d.crypto.bitcoin) tl=qty*d.crypto.bitcoin.try;
+      else if(unit==="ETH"&&d.crypto.ethereum) tl=qty*d.crypto.ethereum.try;
+    }
+    if(tl!=null){
+      $("a_current_tl").value=Math.round(tl);
+      $("a_live_hint").textContent="≈ "+money(tl)+" (canlı kur)";
+    }
+  },
   async addAsset(){
-    const name=val("a_name").trim(),type=val("a_type"),amount=num("a_amount"),note=val("a_note").trim();
-    if(!name||!amount){toast("Ad ve tutar gerekli","err");return;}
-    await setDoc(D("assets",uid2()),{name,type,amount,note,createdAt:serverTimestamp()});
-    clr("a_name","a_amount","a_note");toast("Varlık eklendi ✓","ok");
+    const name=val("a_name").trim(), type=val("a_type"), note=val("a_note").trim();
+    const costTL=num("a_cost");
+    const unitTypes=["altin","doviz","kripto"];
+    let amount, qty, unit, currentTL;
+    if(unitTypes.includes(type)){
+      qty=num("a_qty"); unit=val("a_unit");
+      currentTL=num("a_current_tl");
+      amount=currentTL||qty; // TL equivalent as main amount
+      if(!name||!qty){toast("Ad ve miktar gerekli","err");return;}
+    } else {
+      amount=num("a_amount");
+      if(!name||!amount){toast("Ad ve tutar gerekli","err");return;}
+    }
+    const data={name,type,amount,note,costTL,createdAt:serverTimestamp()};
+    if(qty) data.qty=qty;
+    if(unit) data.unit=unit;
+    await setDoc(D("assets",uid2()),data);
+    clr("a_name","a_amount","a_qty","a_current_tl","a_cost","a_note");
+    toast("Varlık eklendi ✓","ok");
   },
   editAsset(id){
     const a=S.assets.find(x=>x.id===id);if(!a)return;
-    $("a_name").value=a.name;$("a_type").value=a.type;$("a_amount").value=a.amount;$("a_note").value=a.note||"";
+    $("a_name").value=a.name;$("a_type").value=a.type;
+    if(a.qty){$("a_qty").value=a.qty;$("a_unit").value=a.unit||"gram";}
+    else $("a_amount").value=a.amount;
+    $("a_cost").value=a.costTL||"";
+    $("a_note").value=a.note||"";
+    window.H.onAssetTypeChange();
     const btn=$("assetBtn");btn.textContent="Güncelle";
     btn.onclick=async()=>{
-      const amount=num("a_amount");if(!amount){toast("Tutar gerekli","err");return;}
-      await setDoc(D("assets",id),{...a,amount,note:val("a_note").trim()});
-      clr("a_amount","a_note");btn.textContent="Kaydet";btn.onclick=()=>window.H.addAsset();
+      const unitTypes=["altin","doviz","kripto"];
+      let amount=unitTypes.includes(a.type)?num("a_current_tl")||num("a_qty"):num("a_amount");
+      if(!amount){toast("Tutar gerekli","err");return;}
+      await setDoc(D("assets",id),{...a,amount,qty:num("a_qty")||null,unit:val("a_unit")||null,costTL:num("a_cost"),note:val("a_note").trim()});
+      clr("a_amount","a_qty","a_current_tl","a_cost","a_note");
+      btn.textContent="Kaydet";btn.onclick=()=>window.H.addAsset();
       toast("Güncellendi ✓","ok");
     };
   },
@@ -700,6 +906,87 @@ window.H = {
     if(!name||!amount){toast("Ad ve tutar gerekli","err");return;}
     await setDoc(D("subscriptions",uid2()),{name,amount,period,day,icon,cat,createdAt:serverTimestamp()});
     clr("s_name","s_amount","s_day","s_icon");toast("Abonelik eklendi ✓","ok");
+  },
+
+  // ── HİSSE TAKİP ──
+  async addStock(){
+    let sym=val("st_sym").trim().toUpperCase();
+    const qty=num("st_qty"), cost=num("st_cost");
+    if(!sym){toast("Sembol gerekli","err");return;}
+    // Add .IS suffix for BIST if not present
+    if(!sym.includes(".")&&!sym.startsWith("^")) sym=sym+".IS";
+    await setDoc(D("stocks",uid2()),{sym,qty,cost,addedAt:serverTimestamp()});
+    clr("st_sym","st_qty","st_cost");
+    toast("Hisse eklendi, veri çekiliyor...","ok");
+    setTimeout(()=>window.H.refreshStocks(),500);
+  },
+  async refreshStocks(){
+    const el=document.getElementById("stockList");
+    if(!el||!S.stocks||!S.stocks.length){
+      if(el) el.innerHTML=`<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Takip listene hisse ekle (THYAO, GARAN...)</div></div>`;
+      return;
+    }
+    el.innerHTML=`<div class="mkt-loading">Veriler çekiliyor...</div>`;
+    const results=await Promise.allSettled(
+      S.stocks.map(s=>
+        fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${s.sym}?interval=1d&range=5d`)
+          .then(r=>r.json())
+          .then(d=>{
+            const q=d?.chart?.result?.[0];
+            if(!q) return{...s,price:null,prev:null,err:true};
+            const meta=q.meta;
+            const price=meta.regularMarketPrice;
+            const prev=meta.chartPreviousClose;
+            const name=meta.shortName||meta.symbol||s.sym;
+            return{...s,price,prev,name};
+          })
+          .catch(()=>({...s,price:null,err:true}))
+      )
+    );
+    const stocks=results.map(r=>r.status==="fulfilled"?r.value:r.reason);
+    const now=new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+    const upd=document.getElementById("stocksLastUpd");
+    if(upd) upd.textContent="Güncellendi: "+now;
+
+    let totalCost=0, totalNow=0;
+    el.innerHTML=stocks.map(s=>{
+      if(s.err||s.price==null) return`<div class="mkt-row"><div class="mkt-left"><div class="mkt-ico" style="background:var(--paper2)">📊</div><div><div class="mkt-sym">${s.sym}</div><div class="mkt-name" style="color:var(--red)">Veri alınamadı</div></div></div><div class="mkt-right"><button class="del-btn" style="display:block;position:static" onclick="window.H.delDoc('stocks','${s.id}')">✕</button></div></div>`;
+      const chgPct=s.prev?((s.price-s.prev)/s.prev)*100:null;
+      const chgStr=chgPct!=null?(chgPct>=0?"▲":"▼")+" "+Math.abs(chgPct).toFixed(2)+"%":"";
+      const chgCol=chgPct==null?"var(--muted)":chgPct>=0?"var(--green)":"var(--red)";
+      // P&L
+      let plHtml="";
+      if(s.qty&&s.cost){
+        const invested=s.qty*s.cost;
+        const current=s.qty*s.price;
+        const pl=current-invested;
+        const plPct=(pl/invested)*100;
+        totalCost+=invested; totalNow+=current;
+        plHtml=`<div style="font-size:11px;color:${pl>=0?"var(--green)":"var(--red)"};font-weight:600">${pl>=0?"+":""}${money(pl)} (%${Math.abs(plPct).toFixed(1)})</div>`;
+      }
+      const displayName=(s.name||s.sym).replace(".IS","").replace("BIST","");
+      return`<div class="mkt-row">
+        <div class="mkt-left">
+          <div class="mkt-ico" style="background:#d1fae5;color:var(--green);font-size:12px;font-weight:700">${s.sym.replace(".IS","").slice(0,4)}</div>
+          <div><div class="mkt-sym">${s.sym.replace(".IS","")}</div><div class="mkt-name">${displayName}${s.qty?" · "+s.qty+" adet":""}</div></div>
+        </div>
+        <div class="mkt-right">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div><div class="mkt-price">${MKT.fmt(s.price)} ₺</div><div class="mkt-chg" style="color:${chgCol}">${chgStr}</div>${plHtml}</div>
+            <button class="del-btn" style="display:block;position:static" onclick="window.H.delDoc('stocks','${s.id}')">✕</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("");
+    // Total P&L summary
+    if(totalCost>0){
+      const pl=totalNow-totalCost;
+      const plPct=(pl/totalCost)*100;
+      el.innerHTML+=`<div style="padding:10px 18px;border-top:2px solid var(--line);display:flex;justify-content:space-between;font-size:13px;background:var(--paper)">
+        <span style="font-weight:600">Toplam P&L</span>
+        <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:${pl>=0?"var(--green)":"var(--red)"}">${pl>=0?"+":""}${money(pl)} (%${plPct.toFixed(1)})</span>
+      </div>`;
+    }
   },
 
   async saveBudget(){
@@ -733,6 +1020,289 @@ window.H = {
 const today2=new Date().toISOString().split("T")[0];
 ["q_d","f_d"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
 window.addEventListener("resize",()=>rChart());
+// ══════════════════════════════════════════
+// MARKET DATA
+// ══════════════════════════════════════════
+const MKT = {
+  data: {},
+  lastUpdate: null,
+
+  async fetch() {
+    // Use multiple free APIs with CORS proxy fallback
+    try {
+      await Promise.allSettled([
+        MKT.fetchFX(),
+        MKT.fetchCrypto(),
+        MKT.fetchBIST(),
+      ]);
+      MKT.lastUpdate = new Date();
+      MKT.render();
+    } catch(e) {
+      console.warn("Market fetch error:", e);
+    }
+  },
+
+  // ExchangeRate-API (free, no key needed for basic)
+  async fetchFX() {
+    const r = await fetch("https://open.er-api.com/v6/latest/USD");
+    const d = await r.json();
+    if (!d.rates) return;
+    const usdTry = d.rates.TRY;
+    const eurTry = d.rates.TRY / d.rates.EUR;
+    const gbpTry = d.rates.TRY / d.rates.GBP;
+    // Gold in USD/oz from a free endpoint
+    let goldOz = null, goldGram = null;
+    try {
+      const gr = await fetch("https://open.er-api.com/v6/latest/XAU");
+      const gd = await gr.json();
+      if (gd.rates && gd.rates.TRY) {
+        goldOz   = gd.rates.TRY;           // 1 ons = X TL
+        goldGram = gd.rates.TRY / 31.1035; // gram altın TL
+      }
+    } catch(e) {}
+
+    MKT.data.usdtry = usdTry;
+    MKT.data.eurtry = eurTry;
+    MKT.data.gbptry = gbpTry;
+    MKT.data.xautry = goldOz;
+    MKT.data.gramAltin = goldGram;
+
+    // Store previous for change calc (session only)
+    if (!MKT.prev) MKT.prev = {};
+  },
+
+  // CoinGecko (free, no key)
+  async fetchCrypto() {
+    const r = await fetch(
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple&vs_currencies=usd,try&include_24hr_change=true"
+    );
+    const d = await r.json();
+    MKT.data.crypto = d;
+  },
+
+  // BIST via Yahoo Finance proxy
+  async fetchBIST() {
+    const symbols = ["XU100.IS", "XU030.IS"];
+    const results = await Promise.allSettled(
+      symbols.map(sym =>
+        fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2d`)
+          .then(r => r.json())
+          .then(d => {
+            const q = d?.chart?.result?.[0];
+            if (!q) return null;
+            const meta = q.meta;
+            return {
+              sym,
+              price: meta.regularMarketPrice,
+              prev:  meta.chartPreviousClose,
+              name:  sym === "XU100.IS" ? "BIST 100" : "BIST 30"
+            };
+          })
+      )
+    );
+    MKT.data.indices = results
+      .filter(r => r.status === "fulfilled" && r.value)
+      .map(r => r.value);
+  },
+
+  fmt(n, dec=2) {
+    if (n == null) return "—";
+    return (+n).toLocaleString("tr-TR", {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  },
+
+  chgHtml(chg) {
+    if (chg == null) return "";
+    const sign = chg >= 0 ? "+" : "";
+    const cls  = chg >= 0 ? "chg-up" : "chg-dn";
+    const arrow = chg >= 0 ? "▲" : "▼";
+    return `<div class="mkt-chg ${cls}">${arrow} ${sign}${MKT.fmt(chg, 2)}%</div>`;
+  },
+
+  mktRow(ico, bgColor, sym, name, price, chgPct, unit="") {
+    return `<div class="mkt-row">
+      <div class="mkt-left">
+        <div class="mkt-ico" style="background:${bgColor}">${ico}</div>
+        <div><div class="mkt-sym">${sym}</div><div class="mkt-name">${name}</div></div>
+      </div>
+      <div class="mkt-right">
+        <div class="mkt-price">${price}${unit ? ' <span style="font-size:11px;font-weight:400;color:var(--muted)">'+unit+'</span>' : ''}</div>
+        ${MKT.chgHtml(chgPct)}
+      </div>
+    </div>`;
+  },
+
+  render() {
+    const d = MKT.data;
+    const fmt = MKT.fmt;
+    const chg = MKT.chgHtml.bind(MKT);
+
+    // ── Top Cards ──
+    const mktCards = document.getElementById("mktCards");
+    if (mktCards) {
+      const usd = d.usdtry;
+      const eur = d.eurtry;
+      const gram = d.gramAltin;
+      const btc = d.crypto?.bitcoin?.try;
+      mktCards.innerHTML = `
+        <div class="card" style="border-top:3px solid #2563eb">
+          <div class="card-tag" style="color:var(--blue)">💵 USD/TRY</div>
+          <div class="card-val" style="color:var(--blue)">${usd ? fmt(usd) : "—"} ₺</div>
+        </div>
+        <div class="card" style="border-top:3px solid #7c3aed">
+          <div class="card-tag" style="color:var(--purple)">🇪🇺 EUR/TRY</div>
+          <div class="card-val" style="color:var(--purple)">${eur ? fmt(eur) : "—"} ₺</div>
+        </div>
+        <div class="card" style="border-top:3px solid #b5830a">
+          <div class="card-tag" style="color:var(--gold)">🥇 Gram Altın</div>
+          <div class="card-val" style="color:var(--gold)">${gram ? fmt(gram) : "—"} ₺</div>
+        </div>
+        <div class="card" style="border-top:3px solid #f59e0b">
+          <div class="card-tag" style="color:#92400e">₿ Bitcoin (TL)</div>
+          <div class="card-val" style="color:#92400e">${btc ? fmt(btc/1000,0)+"K" : "—"} ₺</div>
+        </div>`;
+    }
+
+    // ── FX List ──
+    const fxEl = document.getElementById("fxList");
+    if (fxEl) {
+      fxEl.innerHTML = [
+        MKT.mktRow("💵","#dbeafe","USD/TRY","Amerikan Doları", d.usdtry ? fmt(d.usdtry)+" ₺":"—", null),
+        MKT.mktRow("🇪🇺","#ede9fe","EUR/TRY","Euro",            d.eurtry ? fmt(d.eurtry)+" ₺":"—", null),
+        MKT.mktRow("🇬🇧","#fce7f3","GBP/TRY","İngiliz Sterlini",d.gbptry ? fmt(d.gbptry)+" ₺":"—", null),
+      ].join("");
+      const fxTime = document.getElementById("fxTime");
+      if (fxTime && MKT.lastUpdate) fxTime.textContent = MKT.lastUpdate.toLocaleTimeString("tr-TR", {hour:"2-digit",minute:"2-digit"});
+    }
+
+    // ── Commodities ──
+    const commEl = document.getElementById("commodList");
+    if (commEl) {
+      const ons = d.xautry;
+      const gram = d.gramAltin;
+      commEl.innerHTML = [
+        MKT.mktRow("🥇","#fef3cd","Gram Altın","XAU/TRY gram", gram ? fmt(gram)+" ₺":"—", null),
+        MKT.mktRow("🥇","#fef9c3","ONS Altın", "XAU/TRY ons",  ons  ? fmt(ons,0)+" ₺":"—", null),
+        MKT.mktRow("🥈","#f1f5f9","Gümüş",     "XAG (yaklaşık)",gram ? fmt(gram/80,2)+" ₺":"—", null),
+      ].join("");
+    }
+
+    // ── Crypto ──
+    const cryptoEl = document.getElementById("cryptoList");
+    if (cryptoEl && d.crypto) {
+      const list = [
+        {id:"bitcoin",  sym:"BTC", name:"Bitcoin",  ico:"₿",  bg:"#fef3cd"},
+        {id:"ethereum", sym:"ETH", name:"Ethereum", ico:"⟠",  bg:"#ede9fe"},
+        {id:"solana",   sym:"SOL", name:"Solana",   ico:"◎",  bg:"#d1fae5"},
+        {id:"ripple",   sym:"XRP", name:"XRP",      ico:"✕",  bg:"#dbeafe"},
+      ];
+      cryptoEl.innerHTML = list.map(c => {
+        const item = d.crypto[c.id];
+        const priceTRY = item?.try;
+        const chg24 = item?.usd_24h_change;
+        const priceStr = priceTRY
+          ? (priceTRY >= 100000 ? fmt(priceTRY/1000,1)+"K ₺" : fmt(priceTRY)+" ₺")
+          : "—";
+        return MKT.mktRow(c.ico, c.bg, c.sym, c.name, priceStr, chg24);
+      }).join("");
+    }
+
+    // ── Indices ──
+    const idxEl = document.getElementById("indexList");
+    if (idxEl) {
+      if (d.indices && d.indices.length) {
+        idxEl.innerHTML = d.indices.map(ix => {
+          const chgPct = ix.prev ? ((ix.price - ix.prev) / ix.prev) * 100 : null;
+          return MKT.mktRow("📈","#d1fae5", ix.name, ix.sym, fmt(ix.price,0), chgPct);
+        }).join("");
+      } else {
+        idxEl.innerHTML = `<div class="mkt-loading">Yükleniyor...</div>`;
+      }
+    }
+
+    // ── Portfolio in TL ──
+    const portEl = document.getElementById("portfolioMkt");
+    if (portEl) {
+      const assets = S.assets;
+      if (!assets.length) {
+        portEl.innerHTML = `<div class="mkt-loading">Varlıklar sekmesinden varlık ekle</div>`;
+      } else {
+        let rows = assets.map(a => {
+          // For gold assets, show estimated TL value using live gram price
+          let liveVal = null;
+          if ((a.type === "altin" || a.name.toLowerCase().includes("altın")) && d.gramAltin) {
+            // If stored in grams, multiply; if stored in TL just show
+            liveVal = a.amount; // already in TL
+          } else if (a.type === "kripto" && a.name.toLowerCase().includes("btc") && d.crypto?.bitcoin?.try) {
+            liveVal = a.amount; // stored in TL
+          } else {
+            liveVal = a.amount;
+          }
+          const ico = {nakit:"💵",birikim:"🏦",altin:"🥇",hisse:"📈",kripto:"🔷",gayrimenkul:"🏠",diger:"📦"}[a.type]||"📦";
+          return `<div class="mkt-row">
+            <div class="mkt-left">
+              <div class="mkt-ico" style="background:#ccfbf1">${ico}</div>
+              <div><div class="mkt-sym">${a.name}</div><div class="mkt-name">${a.type}</div></div>
+            </div>
+            <div class="mkt-right">
+              <div class="mkt-price">${fmt(liveVal)} <span style="font-size:11px;color:var(--muted)">₺</span></div>
+            </div>
+          </div>`;
+        }).join("");
+        const total = assets.reduce((s,a)=>s+a.amount,0);
+        rows += `<div style="padding:10px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:13px">
+          <span style="color:var(--muted)">Toplam</span>
+          <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:var(--teal)">${fmt(total)} ₺</span>
+        </div>`;
+        portEl.innerHTML = rows;
+      }
+      const updEl = document.getElementById("mktLastUpd");
+      if (updEl && MKT.lastUpdate) updEl.textContent = MKT.lastUpdate.toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
+    }
+
+    // ── Ticker bar ──
+    const tickerInner = document.getElementById("tickerInner");
+    if (tickerInner) {
+      const items = [];
+      if (d.usdtry) items.push({sym:"USD/TRY", val:fmt(d.usdtry), chg:null});
+      if (d.eurtry) items.push({sym:"EUR/TRY", val:fmt(d.eurtry), chg:null});
+      if (d.gbptry) items.push({sym:"GBP/TRY", val:fmt(d.gbptry), chg:null});
+      if (d.gramAltin) items.push({sym:"GRAM ALTIN", val:fmt(d.gramAltin)+" ₺", chg:null});
+      if (d.xautry) items.push({sym:"ONS ALTIN", val:fmt(d.xautry,0)+" ₺", chg:null});
+      if (d.crypto?.bitcoin) {
+        const btc = d.crypto.bitcoin;
+        items.push({sym:"BTC", val:fmt(btc.try/1000,1)+"K ₺", chg:btc.usd_24h_change});
+      }
+      if (d.crypto?.ethereum) {
+        const eth = d.crypto.ethereum;
+        items.push({sym:"ETH", val:fmt(eth.try)+" ₺", chg:eth.usd_24h_change});
+      }
+      if (d.indices) d.indices.forEach(ix => {
+        const chgPct = ix.prev ? ((ix.price-ix.prev)/ix.prev)*100 : null;
+        items.push({sym:ix.name, val:fmt(ix.price,0), chg:chgPct});
+      });
+
+      if (items.length) {
+        // Duplicate for seamless loop
+        const html = [...items, ...items].map(i => {
+          const chgStr = i.chg != null
+            ? `<span class="t-chg ${i.chg>=0?"t-up":"t-dn}">${i.chg>=0?"▲":"▼"} ${Math.abs(i.chg).toFixed(2)}%</span>`
+            : "";
+          return `<span class="ticker-item"><span class="t-sym">${i.sym}</span> ${i.val} ${chgStr}</span>`;
+        }).join("");
+        tickerInner.innerHTML = html;
+        // Adjust animation speed based on item count
+        const dur = Math.max(20, items.length * 4);
+        tickerInner.style.animation = `ticker ${dur}s linear infinite`;
+      }
+    }
+  }
+};
+
+// Start fetching market data
+MKT.fetch();
+// Refresh every 60 seconds
+setInterval(() => MKT.fetch(), 60000);
+
 initData();
 </script>
 </body>
