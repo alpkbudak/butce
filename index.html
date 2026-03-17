@@ -201,10 +201,11 @@ header{
   <div class="login-card">
     <div class="login-logo">bütçe<em>.</em></div>
     <div class="login-sub">Tüm cihazlarından erişebileceğin<br>kişisel finans takip sistemi</div>
-    <button class="btn-google" onclick="signInGoogle()">
+    <button class="btn-google" id="loginBtn" onclick="signInGoogle()">
       <img src="https://www.google.com/favicon.ico" alt="G">
       Google ile Giriş Yap
     </button>
+    <div id="loginErr" style="color:#c1121f;font-size:12px;margin-top:8px;min-height:16px"></div>
     <div class="login-note">Veriler Firebase'de güvenli şekilde saklanır.<br>Sadece senin hesabın erişebilir.</div>
   </div>
 </div>
@@ -357,7 +358,8 @@ header{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getAuth, GoogleAuthProvider,
-  signInWithPopup, signOut as fbSignOut,
+  signInWithPopup, signInWithRedirect, getRedirectResult,
+  signOut as fbSignOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
@@ -414,10 +416,26 @@ window.qType = 'exp'; window.fType = 'exp';
 // ── AUTH ──
 window.signInGoogle = async () => {
   try {
+    const btn = document.getElementById('loginBtn');
+    btn.textContent = 'Yönlendiriliyor...';
+    btn.disabled = true;
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-  } catch(e) { toast('Giriş hatası: '+e.message,'err'); }
+    await signInWithRedirect(auth, provider);
+  } catch(e) {
+    document.getElementById('loginErr').textContent = 'Hata: ' + e.message;
+    const btn = document.getElementById('loginBtn');
+    btn.innerHTML = '<img src="https://www.google.com/favicon.ico" alt="G" style="width:20px;height:20px"> Google ile Giriş Yap';
+    btn.disabled = false;
+  }
 };
+
+// Redirect sonrası döndüğümüzde sonucu al
+getRedirectResult(auth).catch(e => {
+  if (e && e.code !== 'auth/no-current-user') {
+    const el = document.getElementById('loginErr');
+    if (el) el.textContent = 'Giriş hatası: ' + e.message;
+  }
+});
 window.signOut = async () => {
   if(!confirm('Çıkış yapmak istiyor musun?')) return;
   if(unsubTxns) unsubTxns();
