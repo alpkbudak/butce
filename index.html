@@ -802,12 +802,12 @@ function rKasalar() {
         <div class="g-row-title">${ACC_ICO[a.type]||"🏦"} ${a.name}</div>
         <div class="g-row-sub">${a.type} · ${txnCount} işlem · Bu ay: <span style="color:var(--green)">+${money(mInc)}</span> / <span style="color:var(--red)">-${money(mExp)}</span></div>
       </div>
-      <div class="g-row-right">
+      <div class="g-row-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
         <div class="g-row-val" style="color:${bal>=0?"var(--teal)":"var(--red)"}">${money(bal)}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:1px">Başlangıç: ${money(a.initialBalance||0)}</div>
-        <div style="display:flex;justify-content:flex-end;margin-top:4px;gap:5px">
-          <button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.editAccount('${a.id}')">Düzenle</button>
-          <button class="btn-sm danger" style="padding:2px 8px;font-size:11px" onclick="window.H.deleteAccount('${a.id}')">Sil</button>
+        <div style="font-size:11px;color:var(--muted)">Başlangıç: ${money(a.initialBalance||0)}</div>
+        <div style="display:flex;gap:6px;margin-top:2px">
+          <button onclick="window.H.editAccount('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--line);border-radius:6px;background:white;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);font-family:inherit">✎ Düzenle</button>
+          <button onclick="window.H.deleteAccount('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--red);border-radius:6px;background:var(--red-bg);font-size:12px;font-weight:600;cursor:pointer;color:var(--red);font-family:inherit">✕ Sil</button>
         </div>
       </div>
     </div>`;
