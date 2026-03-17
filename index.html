@@ -166,9 +166,9 @@ header{
 <header>
   <div class="logo">bütçe<em>.</em></div>
   <div class="header-mid">
-    <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+    <button class="month-btn" onclick="window._changeMonth(-1)">‹</button>
     <div id="monthLabel"></div>
-    <button class="month-btn" onclick="changeMonth(1)">›</button>
+    <button class="month-btn" onclick="window._changeMonth(1)">›</button>
   </div>
   <div class="header-right">
     <div id="syncStatus"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">—</span></div>
@@ -177,11 +177,11 @@ header{
 
 <div class="wrapper">
   <div class="tabs">
-    <button class="tab active" onclick="showTab('ozet',this)">📊 Özet</button>
-    <button class="tab" onclick="showTab('islemler',this)">💳 İşlemler</button>
-    <button class="tab" onclick="showTab('butce',this)">🎯 Bütçeler</button>
-    <button class="tab" onclick="showTab('istatistik',this)">📈 İstatistik</button>
-    <button class="tab" onclick="showTab('ayarlar',this)">⚙️ Ayarlar</button>
+    <button class="tab active" onclick="window._showTab('ozet',this)">📊 Özet</button>
+    <button class="tab" onclick="window._showTab('islemler',this)">💳 İşlemler</button>
+    <button class="tab" onclick="window._showTab('butce',this)">🎯 Bütçeler</button>
+    <button class="tab" onclick="window._showTab('istatistik',this)">📈 İstatistik</button>
+    <button class="tab" onclick="window._showTab('ayarlar',this)">⚙️ Ayarlar</button>
   </div>
 
   <!-- ÖZET -->
@@ -192,7 +192,7 @@ header{
         <div class="panel" style="margin-bottom:16px">
           <div class="panel-head">
             <div class="panel-title">Son İşlemler</div>
-            <button class="btn-sm" onclick="showTab('islemler',document.querySelectorAll('.tab')[1])">Tümü →</button>
+            <button class="btn-sm" onclick="window._showTab('islemler',document.querySelectorAll('.tab')[1])">Tümü →</button>
           </div>
           <div id="recentList"></div>
         </div>
@@ -205,8 +205,8 @@ header{
         <div class="form-box" style="margin-bottom:16px">
           <div class="form-title">Hızlı Ekle</div>
           <div class="type-pills">
-            <button class="type-pill sel-exp" id="qPillExp" onclick="setQType('exp')">− Gider</button>
-            <button class="type-pill" id="qPillInc" onclick="setQType('inc')">+ Gelir</button>
+            <button class="type-pill sel-exp" id="qPillExp" onclick="window._setQType('exp')">− Gider</button>
+            <button class="type-pill" id="qPillInc" onclick="window._setQType('inc')">+ Gelir</button>
           </div>
           <div class="field"><label>Açıklama</label><input id="q_n" placeholder="Ne için?"></div>
           <div class="r2">
@@ -214,7 +214,7 @@ header{
             <div class="field"><label>Tarih</label><input id="q_d" type="date"></div>
           </div>
           <div class="field"><label>Kategori</label><select id="q_c"></select></div>
-          <button class="btn-add" onclick="addTxn('quick')">Ekle</button>
+          <button class="btn-add" onclick="window._addTxn('quick')">Ekle</button>
         </div>
         <div class="panel">
           <div class="panel-head"><div class="panel-title">Bu Ay Kategoriler</div></div>
@@ -229,8 +229,8 @@ header{
     <div class="form-box" style="margin-bottom:18px">
       <div class="form-title">Yeni İşlem</div>
       <div class="type-pills">
-        <button class="type-pill sel-exp" id="fPillExp" onclick="setFType('exp')">− Gider</button>
-        <button class="type-pill" id="fPillInc" onclick="setFType('inc')">+ Gelir</button>
+        <button class="type-pill sel-exp" id="fPillExp" onclick="window._setFType('exp')">− Gider</button>
+        <button class="type-pill" id="fPillInc" onclick="window._setFType('inc')">+ Gelir</button>
       </div>
       <div class="r3">
         <div class="field"><label>Açıklama</label><input id="f_n" placeholder="Açıklama..."></div>
@@ -240,13 +240,13 @@ header{
       </div>
       <div style="display:grid;grid-template-columns:1fr auto;gap:9px;max-width:480px;align-items:flex-end">
         <div class="field" style="margin:0"><label>Not</label><input id="f_note" placeholder="İsteğe bağlı..."></div>
-        <button class="btn-add" style="width:110px;margin:0" onclick="addTxn('full')">Ekle</button>
+        <button class="btn-add" style="width:110px;margin:0" onclick="window._addTxn('full')">Ekle</button>
       </div>
     </div>
     <div class="panel">
       <div class="panel-head">
         <div class="panel-title">İşlemler</div>
-        <input id="searchQ" placeholder="🔍 Ara..." oninput="renderTxns()"
+        <input id="searchQ" placeholder="🔍 Ara..." oninput="window._renderTxns()"
           style="border:1.5px solid var(--line);border-radius:7px;padding:6px 10px;font-size:12px;background:var(--paper);color:var(--ink);font-family:inherit;width:150px">
       </div>
       <div id="txnList"></div>
@@ -261,7 +261,7 @@ header{
         <div class="form-title">Bütçe Ekle / Güncelle</div>
         <div class="field"><label>Kategori</label><select id="b_c"></select></div>
         <div class="field"><label>Aylık Limit ₺</label><input id="b_a" type="number" placeholder="0"></div>
-        <button class="btn-add" onclick="saveBudget()">Kaydet</button>
+        <button class="btn-add" onclick="window._saveBudget()">Kaydet</button>
       </div>
     </div>
   </div>
@@ -285,13 +285,13 @@ header{
           <div class="field" style="margin:0"><label>Ad</label><input id="nc_name" placeholder="Örn: Spor"></div>
           <div class="field" style="margin:0"><label>İkon</label><input id="nc_icon" placeholder="🏋️" maxlength="4"></div>
           <div class="field" style="margin:0"><label>Tür</label><select id="nc_type"><option value="exp">Gider</option><option value="inc">Gelir</option></select></div>
-          <button class="btn-add" style="width:auto;padding:9px 14px;margin:0" onclick="addCat()">+</button>
+          <button class="btn-add" style="width:auto;padding:9px 14px;margin:0" onclick="window._addCat()">+</button>
         </div>
       </div>
     </div>
     <div class="sett-section">
-      <div class="sett-row"><div><div class="sett-label">Veriyi Dışa Aktar</div><div class="sett-sub">Tüm işlemleri JSON olarak indir</div></div><button class="btn-sm" onclick="exportData()">İndir</button></div>
-      <div class="sett-row"><div><div class="sett-label">Bu Ayın İşlemlerini Sil</div><div class="sett-sub">Geri alınamaz</div></div><button class="btn-sm danger" onclick="clearMonth()">Sil</button></div>
+      <div class="sett-row"><div><div class="sett-label">Veriyi Dışa Aktar</div><div class="sett-sub">Tüm işlemleri JSON olarak indir</div></div><button class="btn-sm" onclick="window._exportData()">İndir</button></div>
+      <div class="sett-row"><div><div class="sett-label">Bu Ayın İşlemlerini Sil</div><div class="sett-sub">Geri alınamaz</div></div><button class="btn-sm danger" onclick="window._clearMonth()">Sil</button></div>
     </div>
   </div>
 </div>
@@ -320,306 +320,225 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
-
-// Tek sabit kullanıcı — giriş yok
 const UID = "alp";
 
-let unsubTxns = null, unsubCats = null, unsubBudgets = null;
-
 const DEFAULT_CATS = [
-  {id:'food',    name:'Yemek',       icon:'🍔', type:'exp'},
-  {id:'market',  name:'Market',      icon:'🛒', type:'exp'},
-  {id:'trans',   name:'Ulaşım',      icon:'🚌', type:'exp'},
-  {id:'bills',   name:'Faturalar',   icon:'💡', type:'exp'},
-  {id:'rent',    name:'Kira',        icon:'🏠', type:'exp'},
-  {id:'health',  name:'Sağlık',      icon:'💊', type:'exp'},
-  {id:'ent',     name:'Eğlence',     icon:'🎬', type:'exp'},
-  {id:'clothes', name:'Giyim',       icon:'👕', type:'exp'},
-  {id:'tech',    name:'Teknoloji',   icon:'💻', type:'exp'},
-  {id:'edu',     name:'Eğitim',      icon:'📚', type:'exp'},
-  {id:'other_e', name:'Diğer',       icon:'📌', type:'exp'},
-  {id:'salary',  name:'Maaş',        icon:'💰', type:'inc'},
-  {id:'freelance',name:'Freelance',  icon:'🎯', type:'inc'},
-  {id:'invest',  name:'Yatırım',     icon:'📈', type:'inc'},
-  {id:'other_i', name:'Diğer Gelir', icon:'✨', type:'inc'},
+  {id:"food",    name:"Yemek",       icon:"🍔", type:"exp"},
+  {id:"market",  name:"Market",      icon:"🛒", type:"exp"},
+  {id:"trans",   name:"Ulaşım",      icon:"🚌", type:"exp"},
+  {id:"bills",   name:"Faturalar",   icon:"💡", type:"exp"},
+  {id:"rent",    name:"Kira",        icon:"🏠", type:"exp"},
+  {id:"health",  name:"Sağlık",      icon:"💊", type:"exp"},
+  {id:"ent",     name:"Eğlence",     icon:"🎬", type:"exp"},
+  {id:"clothes", name:"Giyim",       icon:"👕", type:"exp"},
+  {id:"tech",    name:"Teknoloji",   icon:"💻", type:"exp"},
+  {id:"edu",     name:"Eğitim",      icon:"📚", type:"exp"},
+  {id:"other_e", name:"Diğer",       icon:"📌", type:"exp"},
+  {id:"salary",  name:"Maaş",        icon:"💰", type:"inc"},
+  {id:"freelance",name:"Freelance",  icon:"🎯", type:"inc"},
+  {id:"invest",  name:"Yatırım",     icon:"📈", type:"inc"},
+  {id:"other_i", name:"Diğer Gelir", icon:"✨", type:"inc"},
 ];
 
-// ── GLOBAL STATE ──
-window.S = { transactions:[], categories:[...DEFAULT_CATS], budgets:{} };
-window.curMonth = new Date(); window.curMonth.setDate(1);
-window.qType = 'exp'; window.fType = 'exp';
+// ── STATE ──
+const S = { transactions:[], categories:[...DEFAULT_CATS], budgets:{} };
+let curMonth = new Date(); curMonth.setDate(1);
+let qType = "exp", fType = "exp";
 
-// ── FIRESTORE PATHS ──
+// ── FIRESTORE REFS ──
 const txnCol    = () => collection(db, `users/${UID}/transactions`);
-const catCol    = () => collection(db, `users/${UID}/categories`);
-const budgetDoc = () => doc(db, `users/${UID}/meta/budgets`);
+const catColRef = () => collection(db, `users/${UID}/categories`);
+const budgetRef = () => doc(db, `users/${UID}/meta/budgets`);
+
+// ── HELPERS ──
+const money = n => (+n||0).toLocaleString("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2})+" ₺";
+const getCat = id => S.categories.find(c=>c.id===id) || {name:id, icon:"📌", type:"exp"};
+const CAT_COLORS = {food:"#fb923c",market:"#facc15",trans:"#60a5fa",bills:"#a78bfa",rent:"#f472b6",health:"#34d399",ent:"#f87171",clothes:"#e879f9",tech:"#38bdf8",edu:"#4ade80",other_e:"#94a3b8",salary:"#4ade80",freelance:"#818cf8",invest:"#2dd4bf",other_i:"#a3e635"};
+const getCatColor = id => CAT_COLORS[id] || "#8e8b80";
+
+function monthTxns() {
+  const y = curMonth.getFullYear(), m = curMonth.getMonth();
+  return S.transactions.filter(t => {
+    const d = new Date(t.date);
+    return d.getFullYear()===y && d.getMonth()===m;
+  }).sort((a,b) => new Date(b.date)-new Date(a.date));
+}
+
+function setSyncStatus(st, txt) {
+  const dot = document.getElementById("syncDot");
+  const sp  = document.getElementById("syncTxt");
+  if (dot) dot.className = "sync-dot" + (st?" "+st:"");
+  if (sp)  sp.textContent = txt;
+  if (st==="ok") {
+    const el = document.getElementById("settSync");
+    if (el) el.textContent = "Son: " + new Date().toLocaleTimeString("tr-TR");
+  }
+}
+
+function toast(msg, type="") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "toast show" + (type?" "+type:"");
+  setTimeout(()=>el.classList.remove("show"), 2600);
+}
 
 // ── INIT ──
 async function initData() {
-  setSyncStatus('busy', 'Yükleniyor...');
-  // Seed default categories if empty
-  const snap = await getDocs(catCol());
+  setSyncStatus("busy","Yükleniyor...");
+  const snap = await getDocs(catColRef());
   if (snap.empty) {
     const batch = writeBatch(db);
-    DEFAULT_CATS.forEach(c => batch.set(doc(catCol(), c.id), c));
+    DEFAULT_CATS.forEach(c => batch.set(doc(catColRef(), c.id), c));
     await batch.commit();
   }
-  // Real-time listeners
-  unsubTxns = onSnapshot(txnCol(), snap => {
-    window.S.transactions = snap.docs.map(d => ({id:d.id, ...d.data()}));
-    render();
-    setSyncStatus('ok', 'Güncel');
+  onSnapshot(txnCol(), snap => {
+    S.transactions = snap.docs.map(d=>({id:d.id,...d.data()}));
+    render(); setSyncStatus("ok","Güncel");
   });
-  unsubCats = onSnapshot(catCol(), snap => {
-    window.S.categories = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  onSnapshot(catColRef(), snap => {
+    S.categories = snap.docs.map(d=>({id:d.id,...d.data()}));
     render();
   });
-  unsubBudgets = onSnapshot(budgetDoc(), snap => {
-    window.S.budgets = snap.exists() ? (snap.data().data || {}) : {};
+  onSnapshot(budgetRef(), snap => {
+    S.budgets = snap.exists() ? (snap.data().data||{}) : {};
     render();
   });
 }
 
-initData();
-
-// ── ADD TRANSACTION ──
-window.addTxn = async (form) => {
-  const p = form === 'quick'
-    ? {n:'q_n', a:'q_a', d:'q_d', c:'q_c', note:null, type:window.qType}
-    : {n:'f_n', a:'f_a', d:'f_d', c:'f_c', note:'f_note', type:window.fType};
-  const name   = document.getElementById(p.n).value.trim();
-  const amount = parseFloat(document.getElementById(p.a).value);
-  const date   = document.getElementById(p.d).value;
-  const cat    = document.getElementById(p.c).value;
-  const note   = p.note ? document.getElementById(p.note).value.trim() : '';
-  if (!name || !amount || !date) { toast('Açıklama, tutar ve tarih gerekli', 'err'); return; }
-  setSyncStatus('busy', 'Kaydediliyor...');
-  const id = Date.now().toString(36) + Math.random().toString(36).slice(2,5);
-  await setDoc(doc(txnCol(), id), {name, amount, date, type:p.type, category:cat||'other_e', note, createdAt:serverTimestamp()});
-  document.getElementById(p.n).value = '';
-  document.getElementById(p.a).value = '';
-  if (p.note) document.getElementById(p.note).value = '';
-  toast('Eklendi ✓', 'ok');
-};
-
-// ── DELETE TRANSACTION ──
-window.delTxn = async (id) => {
-  await deleteDoc(doc(txnCol(), id));
-  toast('Silindi');
-};
-
-// ── SAVE BUDGET ──
-window.saveBudget = async () => {
-  const cat = document.getElementById('b_c').value;
-  const amt = parseFloat(document.getElementById('b_a').value);
-  if (!cat || !amt) { toast('Kategori ve limit gerekli', 'err'); return; }
-  await setDoc(budgetDoc(), {data: {...window.S.budgets, [cat]: amt}});
-  document.getElementById('b_a').value = '';
-  toast('Bütçe kaydedildi ✓', 'ok');
-};
-
-// ── ADD CATEGORY ──
-window.addCat = async () => {
-  const name = document.getElementById('nc_name').value.trim();
-  const icon = document.getElementById('nc_icon').value.trim() || '📌';
-  const type = document.getElementById('nc_type').value;
-  if (!name) { toast('Kategori adı gerekli', 'err'); return; }
-  const id = name.toLowerCase().replace(/[^a-z0-9]/g,'_') + '_' + Date.now().toString(36);
-  await setDoc(doc(catCol(), id), {name, icon, type});
-  document.getElementById('nc_name').value = '';
-  document.getElementById('nc_icon').value = '';
-  toast('Kategori eklendi ✓', 'ok');
-};
-
-// ── DELETE CATEGORY ──
-window.deleteCat = async (id) => {
-  await deleteDoc(doc(catCol(), id));
-  toast('Silindi');
-};
-
-// ── CLEAR MONTH ──
-window.clearMonth = async () => {
-  if (!confirm('Bu ayın tüm işlemleri silinecek. Emin misin?')) return;
-  const batch = writeBatch(db);
-  monthTxns().forEach(t => batch.delete(doc(txnCol(), t.id)));
-  await batch.commit();
-  toast('Ay temizlendi', 'ok');
-};
-
-// ── EXPORT ──
-window.exportData = () => {
-  const blob = new Blob([JSON.stringify(window.S, null, 2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'butce_verisi.json';
-  a.click();
-};
-
-// ── SYNC STATUS ──
-function setSyncStatus(st, txt) {
-  const dot = document.getElementById('syncDot');
-  const t   = document.getElementById('syncTxt');
-  dot.className = 'sync-dot' + (st ? ' '+st : '');
-  t.textContent = txt;
-  if (st === 'ok') {
-    const el = document.getElementById('settSync');
-    if (el) el.textContent = 'Son güncelleme: ' + new Date().toLocaleTimeString('tr-TR');
-  }
-}
-window.setSyncStatus = setSyncStatus;
-
-// ══════════════════════════════════════════
-// RENDER
-// ══════════════════════════════════════════
-window.render = render;
+// ── RENDER ──
 function render() {
-  const lbl = window.curMonth.toLocaleString('tr-TR', {month:'long', year:'numeric'});
-  document.getElementById('monthLabel').textContent = lbl;
+  const lbl = curMonth.toLocaleString("tr-TR",{month:"long",year:"numeric"});
+  ["monthLabel"].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});
   renderCards(); renderRecent(); renderCatTags();
   renderTxns(); renderBudget(); renderChart();
   renderStats(); renderCatManage(); fillSelects();
 }
 
-function monthTxns() {
-  const y = window.curMonth.getFullYear(), m = window.curMonth.getMonth();
-  return window.S.transactions.filter(t => {
-    const d = new Date(t.date);
-    return d.getFullYear() === y && d.getMonth() === m;
-  }).sort((a,b) => new Date(b.date) - new Date(a.date));
-}
-window.monthTxns = monthTxns;
-
-function money(n) { return (+n||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' ₺'; }
-function cat(id)  { return window.S.categories.find(c=>c.id===id) || {name:id, icon:'📌', type:'exp'}; }
-const COLORS = {food:'#fb923c',market:'#facc15',trans:'#60a5fa',bills:'#a78bfa',rent:'#f472b6',health:'#34d399',ent:'#f87171',clothes:'#e879f9',tech:'#38bdf8',edu:'#4ade80',other_e:'#94a3b8',salary:'#4ade80',freelance:'#818cf8',invest:'#2dd4bf',other_i:'#a3e635'};
-function catCol(id) { return COLORS[id] || '#8e8b80'; }
-
 function renderCards() {
   const t = monthTxns();
-  const inc = t.filter(x=>x.type==='inc').reduce((s,x)=>s+x.amount,0);
-  const exp = t.filter(x=>x.type==='exp').reduce((s,x)=>s+x.amount,0);
-  const net = inc - exp, pct = inc>0 ? Math.round((net/inc)*100) : 0;
-  document.getElementById('summaryCards').innerHTML = `
-    <div class="card c-green"><div class="card-tag">💚 Gelir</div><div class="card-val">${money(inc)}</div><div class="card-sub">${t.filter(x=>x.type==='inc').length} işlem</div></div>
-    <div class="card c-red"><div class="card-tag">❤️ Gider</div><div class="card-val">${money(exp)}</div><div class="card-sub">${t.filter(x=>x.type==='exp').length} işlem</div></div>
-    <div class="card c-blue"><div class="card-tag">💙 Net</div><div class="card-val" style="color:${net>=0?'var(--green)':'var(--red)'}">${money(net)}</div><div class="card-sub">${net>=0?'Fazla':'Açık'}</div></div>
-    <div class="card c-gold"><div class="card-tag">⭐ Tasarruf</div><div class="card-val">%${pct}</div><div class="card-sub">gelirin %${pct}'i</div></div>
-  `;
+  const inc = t.filter(x=>x.type==="inc").reduce((s,x)=>s+x.amount,0);
+  const exp = t.filter(x=>x.type==="exp").reduce((s,x)=>s+x.amount,0);
+  const net = inc-exp, pct = inc>0?Math.round((net/inc)*100):0;
+  const el = document.getElementById("summaryCards");
+  if (!el) return;
+  el.innerHTML = `
+    <div class="card c-green"><div class="card-tag">💚 Gelir</div><div class="card-val">${money(inc)}</div><div class="card-sub">${t.filter(x=>x.type==="inc").length} işlem</div></div>
+    <div class="card c-red"><div class="card-tag">❤️ Gider</div><div class="card-val">${money(exp)}</div><div class="card-sub">${t.filter(x=>x.type==="exp").length} işlem</div></div>
+    <div class="card c-blue"><div class="card-tag">💙 Net</div><div class="card-val" style="color:${net>=0?"var(--green)":"var(--red)"}">${money(net)}</div><div class="card-sub">${net>=0?"Fazla":"Açık"}</div></div>
+    <div class="card c-gold"><div class="card-tag">⭐ Tasarruf</div><div class="card-val">%${pct}</div><div class="card-sub">gelirin %${pct}'i</div></div>`;
 }
 
 function txnRow(t) {
-  const c = cat(t.category), col = catCol(t.category);
+  const c = getCat(t.category), col = getCatColor(t.category);
   return `<div class="txn">
     <div class="txn-ico" style="background:${col}20;color:${col}">${c.icon}</div>
-    <div><div class="txn-name">${t.name}</div><div class="txn-cat">${c.name}${t.note?' · '+t.note:''}</div></div>
-    <div class="txn-date">${new Date(t.date).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</div>
-    <div class="txn-amt ${t.type}">${t.type==='inc'?'+':'−'}${money(t.amount)}<button class="del-btn" onclick="delTxn('${t.id}')">✕</button></div>
+    <div><div class="txn-name">${t.name}</div><div class="txn-cat">${c.name}${t.note?" · "+t.note:""}</div></div>
+    <div class="txn-date">${new Date(t.date).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})}</div>
+    <div class="txn-amt ${t.type}">${t.type==="inc"?"+":"−"}${money(t.amount)}<button class="del-btn" onclick="window._delTxn('${t.id}')">✕</button></div>
   </div>`;
 }
 
 function renderRecent() {
-  const el = document.getElementById('recentList'); if (!el) return;
+  const el = document.getElementById("recentList"); if (!el) return;
   const list = monthTxns().slice(0,6);
-  el.innerHTML = list.length ? list.map(txnRow).join('') : `<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Bu ay işlem yok</div></div>`;
+  el.innerHTML = list.length ? list.map(txnRow).join("") : `<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Bu ay işlem yok</div></div>`;
 }
 
-window.renderTxns = function() {
-  const el = document.getElementById('txnList'); if (!el) return;
-  const q = (document.getElementById('searchQ')?.value||'').toLowerCase();
+function renderTxns() {
+  const el = document.getElementById("txnList"); if (!el) return;
+  const q = (document.getElementById("searchQ")?.value||"").toLowerCase();
   let list = monthTxns();
-  if (q) list = list.filter(t => t.name.toLowerCase().includes(q) || cat(t.category).name.toLowerCase().includes(q));
-  el.innerHTML = list.length ? list.map(txnRow).join('') : `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">İşlem bulunamadı</div></div>`;
-};
+  if (q) list = list.filter(t=>t.name.toLowerCase().includes(q)||getCat(t.category).name.toLowerCase().includes(q));
+  el.innerHTML = list.length ? list.map(txnRow).join("") : `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">İşlem bulunamadı</div></div>`;
+}
 
 function renderCatTags() {
-  const el = document.getElementById('catTags'); if (!el) return;
+  const el = document.getElementById("catTags"); if (!el) return;
   const exp = {};
-  monthTxns().filter(t=>t.type==='exp').forEach(t=>{ exp[t.category]=(exp[t.category]||0)+t.amount; });
+  monthTxns().filter(t=>t.type==="exp").forEach(t=>{exp[t.category]=(exp[t.category]||0)+t.amount;});
   const sorted = Object.entries(exp).sort((a,b)=>b[1]-a[1]).slice(0,8);
   el.innerHTML = sorted.length ? sorted.map(([id,amt])=>{
-    const c=cat(id), col=catCol(id);
+    const c=getCat(id), col=getCatColor(id);
     return `<div class="ctag" style="background:${col}18;border-color:${col}40;color:${col}">${c.icon} ${c.name} <strong style="margin-left:3px">${money(amt)}</strong></div>`;
-  }).join('') : `<div style="color:var(--muted);font-size:12px">Henüz gider yok</div>`;
+  }).join("") : `<div style="color:var(--muted);font-size:12px">Henüz gider yok</div>`;
 }
 
 function renderBudget() {
-  const el = document.getElementById('budgetBars'); if (!el) return;
+  const el = document.getElementById("budgetBars"); if (!el) return;
   const exp = {};
-  monthTxns().filter(t=>t.type==='exp').forEach(t=>{ exp[t.category]=(exp[t.category]||0)+t.amount; });
-  const entries = Object.entries(window.S.budgets);
+  monthTxns().filter(t=>t.type==="exp").forEach(t=>{exp[t.category]=(exp[t.category]||0)+t.amount;});
+  const entries = Object.entries(S.budgets);
   if (!entries.length) { el.innerHTML=`<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">Bütçe eklenmedi</div></div>`; return; }
   el.innerHTML = entries.map(([id,lim])=>{
-    const c=cat(id), spent=exp[id]||0, pct=Math.min(100,lim>0?(spent/lim)*100:0);
-    const col = pct>=100?'var(--red)':pct>=75?'#fb923c':'var(--green)';
+    const c=getCat(id), spent=exp[id]||0, pct=Math.min(100,lim>0?(spent/lim)*100:0);
+    const col = pct>=100?"var(--red)":pct>=75?"#fb923c":"var(--green)";
     return `<div class="b-row">
       <div class="b-top"><div class="b-name">${c.icon} ${c.name}</div><div class="b-nums"><strong>${money(spent)}</strong> / ${money(lim)}</div></div>
       <div class="bar"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div>
     </div>`;
-  }).join('');
+  }).join("");
 }
 
 function renderChart() {
-  const canvas = document.getElementById('barChart'); if (!canvas) return;
-  const W = canvas.offsetWidth || 600, H = 155;
-  canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d');
+  const canvas = document.getElementById("barChart"); if (!canvas) return;
+  const W = canvas.offsetWidth||600, H = 155;
+  canvas.width=W; canvas.height=H;
+  const ctx = canvas.getContext("2d");
   const months = [];
-  for (let i=5;i>=0;i--) { const d=new Date(window.curMonth); d.setMonth(d.getMonth()-i); months.push(d); }
-  const getSum = (m,type) => window.S.transactions.filter(t=>{
-    const d=new Date(t.date); return d.getFullYear()===m.getFullYear()&&d.getMonth()===m.getMonth()&&t.type===type;
+  for(let i=5;i>=0;i--){const d=new Date(curMonth);d.setMonth(d.getMonth()-i);months.push(d);}
+  const getSum=(m,type)=>S.transactions.filter(t=>{
+    const d=new Date(t.date);return d.getFullYear()===m.getFullYear()&&d.getMonth()===m.getMonth()&&t.type===type;
   }).reduce((s,t)=>s+t.amount,0);
-  const inc=months.map(m=>getSum(m,'inc')), exp=months.map(m=>getSum(m,'exp'));
+  const inc=months.map(m=>getSum(m,"inc")), exp=months.map(m=>getSum(m,"exp"));
   const maxV=Math.max(...inc,...exp,1);
   const pad={t:10,b:30,l:46,r:8}, cW=W-pad.l-pad.r, cH=H-pad.t-pad.b;
   ctx.clearRect(0,0,W,H);
   for(let i=0;i<=4;i++){
     const y=pad.t+(cH/4)*i;
-    ctx.strokeStyle='#d4d0c8'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    ctx.strokeStyle="#d4d0c8";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
     const v=maxV-(maxV/4)*i;
-    ctx.fillStyle='#8e8b80'; ctx.font='10px sans-serif'; ctx.textAlign='right';
-    ctx.fillText(v>=1000?(v/1000).toFixed(0)+'k':v.toFixed(0),pad.l-4,y+4);
+    ctx.fillStyle="#8e8b80";ctx.font="10px sans-serif";ctx.textAlign="right";
+    ctx.fillText(v>=1000?(v/1000).toFixed(0)+"k":v.toFixed(0),pad.l-4,y+4);
   }
   const gW=cW/6, bW=gW*.28;
   months.forEach((m,i)=>{
     const cx=pad.l+gW*i+gW/2;
-    const iH=(inc[i]/maxV)*cH; ctx.fillStyle='#2d6a4f44'; ctx.fillRect(cx-bW-2,pad.t+cH-iH,bW,iH);
-    const eH=(exp[i]/maxV)*cH; ctx.fillStyle='#c1121f44'; ctx.fillRect(cx+2,pad.t+cH-eH,bW,eH);
-    ctx.fillStyle='#8e8b80'; ctx.font='10px sans-serif'; ctx.textAlign='center';
-    ctx.fillText(m.toLocaleString('tr-TR',{month:'short'}),cx,H-6);
+    const iH=(inc[i]/maxV)*cH; ctx.fillStyle="#2d6a4f44"; ctx.fillRect(cx-bW-2,pad.t+cH-iH,bW,iH);
+    const eH=(exp[i]/maxV)*cH; ctx.fillStyle="#c1121f44"; ctx.fillRect(cx+2,pad.t+cH-eH,bW,eH);
+    ctx.fillStyle="#8e8b80";ctx.font="10px sans-serif";ctx.textAlign="center";
+    ctx.fillText(m.toLocaleString("tr-TR",{month:"short"}),cx,H-6);
   });
 }
 
 function renderStats() {
-  const sc=document.getElementById('statsCards'), sg=document.getElementById('statsGrid');
-  if (!sc||!sg) return;
+  const sc=document.getElementById("statsCards"), sg=document.getElementById("statsGrid");
+  if(!sc||!sg) return;
   const t=monthTxns();
-  const inc=t.filter(x=>x.type==='inc').reduce((s,x)=>s+x.amount,0);
-  const exp=t.filter(x=>x.type==='exp').reduce((s,x)=>s+x.amount,0);
-  const days=new Date(window.curMonth.getFullYear(),window.curMonth.getMonth()+1,0).getDate();
+  const inc=t.filter(x=>x.type==="inc").reduce((s,x)=>s+x.amount,0);
+  const exp=t.filter(x=>x.type==="exp").reduce((s,x)=>s+x.amount,0);
+  const days=new Date(curMonth.getFullYear(),curMonth.getMonth()+1,0).getDate();
   const dayMap={};
-  t.filter(x=>x.type==='exp').forEach(x=>{ dayMap[x.date]=(dayMap[x.date]||0)+x.amount; });
+  t.filter(x=>x.type==="exp").forEach(x=>{dayMap[x.date]=(dayMap[x.date]||0)+x.amount;});
   const topDay=Object.entries(dayMap).sort((a,b)=>b[1]-a[1])[0];
   sc.innerHTML=`
     <div class="card c-green"><div class="card-tag">💰 Toplam Gelir</div><div class="card-val">${money(inc)}</div></div>
     <div class="card c-red"><div class="card-tag">💸 Toplam Gider</div><div class="card-val">${money(exp)}</div></div>
     <div class="card c-blue"><div class="card-tag">📅 Günlük Ort.</div><div class="card-val">${money(exp/days)}</div></div>
-    <div class="card c-gold"><div class="card-tag">🔥 En Yoğun Gün</div><div class="card-val" style="font-size:16px">${topDay?new Date(topDay[0]).toLocaleDateString('tr-TR',{day:'numeric',month:'short'}):'—'}</div></div>
-  `;
+    <div class="card c-gold"><div class="card-tag">🔥 En Yoğun Gün</div><div class="card-val" style="font-size:16px">${topDay?new Date(topDay[0]).toLocaleDateString("tr-TR",{day:"numeric",month:"short"}):"—"}</div></div>`;
   const expCats={};
-  t.filter(x=>x.type==='exp').forEach(x=>{ expCats[x.category]=(expCats[x.category]||0)+x.amount; });
+  t.filter(x=>x.type==="exp").forEach(x=>{expCats[x.category]=(expCats[x.category]||0)+x.amount;});
   const sorted=Object.entries(expCats).sort((a,b)=>b[1]-a[1]);
   sg.innerHTML=`
     <div class="panel">
       <div class="panel-head"><div class="panel-title">Gider Dağılımı</div></div>
       <div style="padding:14px 18px">
-        ${sorted.length ? sorted.map(([id,amt])=>{
-          const c=cat(id),col=catCol(id),pct=exp>0?(amt/exp)*100:0;
+        ${sorted.length?sorted.map(([id,amt])=>{
+          const c=getCat(id),col=getCatColor(id),pct=exp>0?(amt/exp)*100:0;
           return `<div style="margin-bottom:11px">
             <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px"><span>${c.icon} ${c.name}</span><span style="color:var(--muted)">${pct.toFixed(1)}% · ${money(amt)}</span></div>
             <div class="bar"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div>
           </div>`;
-        }).join('') : `<div class="empty"><div class="empty-text">Veri yok</div></div>`}
+        }).join(""):`<div class="empty"><div class="empty-text">Veri yok</div></div>`}
       </div>
     </div>
     <div class="panel">
@@ -629,75 +548,133 @@ function renderStats() {
         <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Gider</span><span style="color:var(--red);font-weight:700">${money(exp)}</span></div>
         <div style="border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;font-size:14px">
           <span style="color:var(--muted)">Net</span>
-          <span style="color:${inc-exp>=0?'var(--green)':'var(--red)'};font-weight:700;font-family:'Bricolage Grotesque'">${money(inc-exp)}</span>
+          <span style="color:${inc-exp>=0?"var(--green)":"var(--red)"};font-weight:700">${money(inc-exp)}</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">İşlem Sayısı</span><span>${t.length}</span></div>
-        ${topDay?`<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">En Yüksek Gün</span><span>${new Date(topDay[0]).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})} · ${money(topDay[1])}</span></div>`:''}
+        ${topDay?`<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">En Yüksek Gün</span><span>${new Date(topDay[0]).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})} · ${money(topDay[1])}</span></div>`:""}
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 function renderCatManage() {
-  const el = document.getElementById('catManage'); if (!el) return;
-  el.innerHTML = window.S.categories.map(c=>`
-    <div class="cat-chip">${c.icon} ${c.name} <span style="color:var(--muted);font-size:10px">${c.type==='exp'?'G':'+'}</span>
-      <button onclick="deleteCat('${c.id}')">×</button>
-    </div>
-  `).join('');
+  const el = document.getElementById("catManage"); if (!el) return;
+  el.innerHTML = S.categories.map(c=>`
+    <div class="cat-chip">${c.icon} ${c.name}
+      <span style="color:var(--muted);font-size:10px">${c.type==="exp"?"G":"+"}</span>
+      <button onclick="window._deleteCat('${c.id}')">×</button>
+    </div>`).join("");
 }
 
 function fillSelects() {
-  ['q_c','f_c'].forEach(id => {
-    const sel = document.getElementById(id); if (!sel) return;
-    const type = id==='q_c' ? window.qType : window.fType;
-    const prev = sel.value;
-    sel.innerHTML = '<option value="">Seç...</option>' +
-      window.S.categories.filter(c=>c.type===type).map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
-    if (prev) sel.value = prev;
+  ["q_c","f_c"].forEach(id=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    const type=id==="q_c"?qType:fType, prev=sel.value;
+    sel.innerHTML="<option value=''>Seç...</option>"+
+      S.categories.filter(c=>c.type===type).map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join("");
+    if(prev) sel.value=prev;
   });
-  const bc = document.getElementById('b_c');
-  if (bc) {
-    bc.innerHTML = '<option value="">Seç...</option>' +
-      window.S.categories.filter(c=>c.type==='exp').map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
-  }
+  const bc=document.getElementById("b_c");
+  if(bc) bc.innerHTML="<option value=''>Seç...</option>"+
+    S.categories.filter(c=>c.type==="exp").map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join("");
 }
 
-// ── NAV ──
-window.showTab = (name, btn) => {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  btn.classList.add('active');
+// ── ACTIONS (window._ prefix so module scope exposes to onclick) ──
+window._showTab = (name, btn) => {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("tab-"+name).classList.add("active");
+  btn.classList.add("active");
   render();
 };
-window.changeMonth = (d) => { window.curMonth.setMonth(window.curMonth.getMonth()+d); render(); };
-window.setQType = (t) => {
-  window.qType = t;
-  document.getElementById('qPillExp').className = 'type-pill' + (t==='exp'?' sel-exp':'');
-  document.getElementById('qPillInc').className = 'type-pill' + (t==='inc'?' sel-inc':'');
-  fillSelects();
-};
-window.setFType = (t) => {
-  window.fType = t;
-  document.getElementById('fPillExp').className = 'type-pill' + (t==='exp'?' sel-exp':'');
-  document.getElementById('fPillInc').className = 'type-pill' + (t==='inc'?' sel-inc':'');
+
+window._changeMonth = (d) => { curMonth.setMonth(curMonth.getMonth()+d); render(); };
+
+window._setQType = (t) => {
+  qType=t;
+  document.getElementById("qPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");
+  document.getElementById("qPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");
   fillSelects();
 };
 
-// ── TOAST ──
-window.toast = (msg, type='') => {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast show' + (type?' '+type:'');
-  setTimeout(()=>el.classList.remove('show'), 2600);
+window._setFType = (t) => {
+  fType=t;
+  document.getElementById("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");
+  document.getElementById("fPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");
+  fillSelects();
 };
 
-// ── DATE DEFAULTS ──
-const today = new Date().toISOString().split('T')[0];
-['q_d','f_d'].forEach(id => { const el=document.getElementById(id); if(el) el.value=today; });
+window._addTxn = async (form) => {
+  const p = form==="quick"
+    ? {n:"q_n",a:"q_a",d:"q_d",c:"q_c",note:null,type:qType}
+    : {n:"f_n",a:"f_a",d:"f_d",c:"f_c",note:"f_note",type:fType};
+  const name   = document.getElementById(p.n).value.trim();
+  const amount = parseFloat(document.getElementById(p.a).value);
+  const date   = document.getElementById(p.d).value;
+  const cat    = document.getElementById(p.c).value;
+  const note   = p.note ? document.getElementById(p.note).value.trim() : "";
+  if(!name||!amount||!date){toast("Açıklama, tutar ve tarih gerekli","err");return;}
+  setSyncStatus("busy","Kaydediliyor...");
+  const id = Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  await setDoc(doc(txnCol(),id),{name,amount,date,type:p.type,category:cat||"other_e",note,createdAt:serverTimestamp()});
+  document.getElementById(p.n).value="";
+  document.getElementById(p.a).value="";
+  if(p.note) document.getElementById(p.note).value="";
+  toast("Eklendi ✓","ok");
+};
 
-window.addEventListener('resize', ()=>renderChart());
+window._delTxn = async (id) => {
+  await deleteDoc(doc(txnCol(),id));
+  toast("Silindi");
+};
+
+window._saveBudget = async () => {
+  const cat=document.getElementById("b_c").value;
+  const amt=parseFloat(document.getElementById("b_a").value);
+  if(!cat||!amt){toast("Kategori ve limit gerekli","err");return;}
+  await setDoc(budgetRef(),{data:{...S.budgets,[cat]:amt}});
+  document.getElementById("b_a").value="";
+  toast("Bütçe kaydedildi ✓","ok");
+};
+
+window._addCat = async () => {
+  const name=document.getElementById("nc_name").value.trim();
+  const icon=document.getElementById("nc_icon").value.trim()||"📌";
+  const type=document.getElementById("nc_type").value;
+  if(!name){toast("Kategori adı gerekli","err");return;}
+  const id=name.toLowerCase().replace(/[^a-z0-9]/g,"_")+"_"+Date.now().toString(36);
+  await setDoc(doc(catColRef(),id),{name,icon,type});
+  document.getElementById("nc_name").value="";
+  document.getElementById("nc_icon").value="";
+  toast("Kategori eklendi ✓","ok");
+};
+
+window._deleteCat = async (id) => {
+  await deleteDoc(doc(catColRef(),id));
+  toast("Silindi");
+};
+
+window._clearMonth = async () => {
+  if(!confirm("Bu ayın tüm işlemleri silinecek. Emin misin?")) return;
+  const batch=writeBatch(db);
+  monthTxns().forEach(t=>batch.delete(doc(txnCol(),t.id)));
+  await batch.commit();
+  toast("Ay temizlendi","ok");
+};
+
+window._exportData = () => {
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="butce.json"; a.click();
+};
+
+window._renderTxns = renderTxns;
+
+// ── SET DATE DEFAULTS ──
+const today = new Date().toISOString().split("T")[0];
+["q_d","f_d"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
+
+window.addEventListener("resize",()=>renderChart());
+
+initData();
 </script>
 </body>
 </html>
