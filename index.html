@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+<link rel="manifest" href="/butce/manifest.json">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bütçe">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finansal Hub</title>
@@ -1747,6 +1752,12 @@ const today2=new Date().toISOString().split("T")[0];
 window.addEventListener("resize",()=>rChart());
 initData();
 </script>
-
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/butce/service-worker.js');
+    });
+  }
+</script>
 </body>
 </html>
