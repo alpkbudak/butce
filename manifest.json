@@ -1,0 +1,10 @@
+{
+  "name": "Finansal Hub",
+  "short_name": "Bütçe",
+  "description": "Kişisel bütçe ve finansal takip uygulaması",
+  "start_url": "/butce/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait"
+}
