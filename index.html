@@ -163,6 +163,22 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 .modal-footer .btn-add{margin:0}
 .btn-danger{padding:10px 20px;background:var(--red-bg);color:var(--red);border:1.5px solid var(--red);border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Bricolage Grotesque',sans-serif;transition:all .15s}
 .btn-danger:hover{background:var(--red);color:white}
+
+/* ── HESAP HAREKETLERİ ── */
+.acc-detail{display:none;border-top:1px solid var(--line);background:var(--paper)}
+.acc-detail.open{display:block}
+.acc-detail-head{padding:10px 18px;display:flex;align-items:center;justify-content:space-between;background:var(--paper2);border-bottom:1px solid var(--line)}
+.acc-detail-title{font-size:12px;font-weight:600;color:var(--muted)}
+.acc-detail-summary{font-size:12px;display:flex;gap:16px}
+.acc-txn{display:grid;grid-template-columns:1fr 80px 90px 56px;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid var(--line);font-size:13px;transition:background .1s}
+.acc-txn:hover{background:var(--paper3)}
+.acc-txn:last-child{border-bottom:none}
+.acc-txn-name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc-txn-cat{font-size:11px;color:var(--muted)}
+.acc-txn-date{font-size:12px;color:var(--muted);text-align:right}
+.acc-txn-amt{font-family:'Bricolage Grotesque',sans-serif;font-size:13px;font-weight:700;text-align:right}
+.acc-txn-amt.inc{color:var(--green)}.acc-txn-amt.exp{color:var(--red)}
+.acc-txn-actions{display:flex;justify-content:flex-end;gap:4px}
 </style>
 </head>
 <body>
@@ -828,27 +844,47 @@ function rKasalar() {
   }
   hl.innerHTML=S.accounts.map(a=>{
     const bal=accBalance(a);
-    const txnCount=S.transactions.filter(t=>t.accountId===a.id).length;
+    const allTxns=S.transactions.filter(t=>t.accountId===a.id).sort((x,y)=>new Date(y.date)-new Date(x.date));
     const today=new Date();
-    const monthTxns=S.transactions.filter(t=>{
-      if(t.accountId!==a.id) return false;
-      const d=new Date(t.date);
-      return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth();
-    });
-    const mInc=monthTxns.filter(t=>t.type==="inc").reduce((s,t)=>s+t.amount,0);
-    const mExp=monthTxns.filter(t=>t.type==="exp").reduce((s,t)=>s+t.amount,0);
-    return `<div class="g-row" style="border-left:3px solid ${a.color||"var(--blue)"}">
-      <div class="g-row-left">
-        <div class="g-row-title">${ACC_ICO[a.type]||"🏦"} ${a.name}</div>
-        <div class="g-row-sub">${a.type} · ${txnCount} işlem · Bu ay: <span style="color:var(--green)">+${money(mInc)}</span> / <span style="color:var(--red)">-${money(mExp)}</span></div>
-      </div>
-      <div class="g-row-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-        <div class="g-row-val" style="color:${bal>=0?"var(--teal)":"var(--red)"}">${money(bal)}</div>
-        <div style="font-size:11px;color:var(--muted)">Başlangıç: ${money(a.initialBalance||0)}</div>
-        <div style="display:flex;gap:6px;margin-top:2px">
-          <button onclick="window.H.editAccount('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--line);border-radius:6px;background:white;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);font-family:inherit">✎ Düzenle</button>
-          <button onclick="window.H.deleteAccount('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--red);border-radius:6px;background:var(--red-bg);font-size:12px;font-weight:600;cursor:pointer;color:var(--red);font-family:inherit">✕ Sil</button>
+    const mTxns=allTxns.filter(t=>{const d=new Date(t.date);return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth();});
+    const mInc=mTxns.filter(t=>t.type==="inc").reduce((s,t)=>s+t.amount,0);
+    const mExp=mTxns.filter(t=>t.type==="exp").reduce((s,t)=>s+t.amount,0);
+    const txnRows=allTxns.map(t=>{
+      const cat=getCat(t.category);
+      return `<div class="acc-txn">
+        <div><div class="acc-txn-name">${t.name}</div><div class="acc-txn-cat">${cat.icon} ${cat.name}${t.note?" · "+t.note:""}</div></div>
+        <div class="acc-txn-date">${new Date(t.date).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})}</div>
+        <div class="acc-txn-amt ${t.type}">${t.type==="inc"?"+":"−"}${money(t.amount)}</div>
+        <div class="acc-txn-actions">
+          <button class="txn-btn" onclick="window.H.editTxn('${t.id}')">✎</button>
+          <button class="txn-btn del" onclick="window.H.delTxn('${t.id}')">✕</button>
         </div>
+      </div>`;
+    }).join("");
+    return `<div style="border-bottom:1px solid var(--line)">
+      <div class="g-row" style="border-left:3px solid ${a.color||"var(--blue)"};cursor:pointer" onclick="window.H.toggleAccDetail('${a.id}')">
+        <div class="g-row-left">
+          <div class="g-row-title">${ACC_ICO[a.type]||"🏦"} ${a.name} <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:4px">▾ hareketler</span></div>
+          <div class="g-row-sub">Bu ay: <span style="color:var(--green)">+${money(mInc)}</span> / <span style="color:var(--red)">−${money(mExp)}</span> · toplam ${allTxns.length} işlem</div>
+        </div>
+        <div class="g-row-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div class="g-row-val" style="color:${bal>=0?"var(--teal)":"var(--red)"}">${money(bal)}</div>
+          <div style="font-size:11px;color:var(--muted)">Başlangıç: ${money(a.initialBalance||0)}</div>
+          <div style="display:flex;gap:6px;margin-top:2px" onclick="event.stopPropagation()">
+            <button onclick="window.H.editAccount('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--line);border-radius:6px;background:white;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);font-family:inherit">✎ Düzenle</button>
+            <button onclick="window.H.deleteAccount('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--red);border-radius:6px;background:var(--red-bg);font-size:12px;font-weight:600;cursor:pointer;color:var(--red);font-family:inherit">✕ Sil</button>
+          </div>
+        </div>
+      </div>
+      <div class="acc-detail" id="acc-detail-${a.id}">
+        <div class="acc-detail-head">
+          <span class="acc-detail-title">📋 ${a.name} — Tüm Hareketler</span>
+          <span class="acc-detail-summary">
+            <span style="color:var(--green)">Toplam Gelir: ${money(allTxns.filter(t=>t.type==="inc").reduce((s,t)=>s+t.amount,0))}</span>
+            <span style="color:var(--red)">Toplam Gider: ${money(allTxns.filter(t=>t.type==="exp").reduce((s,t)=>s+t.amount,0))}</span>
+          </span>
+        </div>
+        ${txnRows||`<div class="empty"><div class="empty-text">Bu hesapta henüz işlem yok</div></div>`}
       </div>
     </div>`;
   }).join("");
@@ -1436,6 +1472,15 @@ window.H = {
   },
 
   // ── HESAP DÜZENLE ──
+  toggleAccDetail(id){
+    const el=$("acc-detail-"+id);
+    if(!el) return;
+    const isOpen=el.classList.contains("open");
+    // Diğer açık olanları kapat
+    document.querySelectorAll(".acc-detail.open").forEach(d=>d.classList.remove("open"));
+    if(!isOpen) el.classList.add("open");
+  },
+
   editAccount(id){
     const a=S.accounts.find(x=>x.id===id); if(!a) return;
     window.H.openModal("Hesabı Düzenle", `
