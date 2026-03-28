@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+<link rel="manifest" href="/butce/manifest.json">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bütçe">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finansal Hub</title>
@@ -126,7 +131,6 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 #toast.ok{background:var(--green)}
 #toast.err{background:var(--red)}
 @media(max-width:900px){.cols{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}.stat-grid{grid-template-columns:1fr}}
-@media(max-width:600px){.txn{grid-template-columns:36px 1fr 1fr 48px}.txn-date{display:none}}
 @media(max-width:520px){.cards{grid-template-columns:1fr}.r4{grid-template-columns:1fr 1fr}}
 
 /* ── TICKER ── */
@@ -164,24 +168,222 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 .btn-danger{padding:10px 20px;background:var(--red-bg);color:var(--red);border:1.5px solid var(--red);border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Bricolage Grotesque',sans-serif;transition:all .15s}
 .btn-danger:hover{background:var(--red);color:white}
 
-/* ── HESAP HAREKETLERİ ── */
-.acc-detail{display:none;border-top:1px solid var(--line);background:var(--paper)}
-.acc-detail.open{display:block}
-.acc-detail-head{padding:10px 18px;display:flex;align-items:center;justify-content:space-between;background:var(--paper2);border-bottom:1px solid var(--line)}
-.acc-detail-title{font-size:12px;font-weight:600;color:var(--muted)}
-.acc-detail-summary{font-size:12px;display:flex;gap:16px}
-.acc-txn{display:grid;grid-template-columns:1fr 80px 90px 56px;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid var(--line);font-size:13px;transition:background .1s}
-.acc-txn:hover{background:var(--paper3)}
-.acc-txn:last-child{border-bottom:none}
-.acc-txn-name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.acc-txn-cat{font-size:11px;color:var(--muted)}
-.acc-txn-date{font-size:12px;color:var(--muted);text-align:right}
-.acc-txn-amt{font-family:'Bricolage Grotesque',sans-serif;font-size:13px;font-weight:700;text-align:right}
-.acc-txn-amt.inc{color:var(--green)}.acc-txn-amt.exp{color:var(--red)}
-.acc-txn-actions{display:flex;justify-content:flex-end;gap:4px}
+/* ══════════════════════════════════
+   PWA SPLASH SCREEN
+══════════════════════════════════ */
+#pwa-splash{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  transition:opacity .4s ease, transform .4s ease;
+}
+#pwa-splash.hide{opacity:0;pointer-events:none;transform:scale(1.04);}
+.splash-logo{font-family:'Bricolage Grotesque',sans-serif;font-size:2.2rem;font-weight:800;color:white;letter-spacing:-1px;}
+.splash-logo em{color:#7ec8a0;font-style:normal;}
+.splash-sub{font-size:.8rem;color:rgba(255,255,255,.4);letter-spacing:.08em;text-transform:uppercase;}
+.splash-bar{width:100px;height:3px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden;margin-top:8px;}
+.splash-fill{height:100%;width:0;background:#7ec8a0;border-radius:2px;animation:splashLoad 1.2s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes splashLoad{0%{width:0}60%{width:70%}100%{width:100%}}
+
+/* ══════════════════════════════════
+   MOBILE BOTTOM NAV
+══════════════════════════════════ */
+#mobile-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:var(--ink);
+  border-top:1px solid rgba(255,255,255,.08);
+  padding:.5rem 0 calc(.5rem + env(safe-area-inset-bottom));
+  flex-direction:row;
+}
+.mnav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;
+  border:none;background:none;cursor:pointer;
+  padding:.4rem .25rem;color:rgba(255,255,255,.4);
+  transition:color .15s;
+}
+.mnav-item.active{color:#7ec8a0;}
+.mnav-icon{font-size:1.25rem;line-height:1;}
+.mnav-label{font-size:.58rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-family:'Bricolage Grotesque',sans-serif;}
+
+/* "Daha Fazla" drawer */
+#more-drawer{
+  position:fixed;bottom:0;left:0;right:0;z-index:190;
+  background:var(--ink);border-top:1px solid rgba(255,255,255,.1);
+  border-radius:20px 20px 0 0;
+  padding:1rem 1.25rem calc(5rem + env(safe-area-inset-bottom));
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.23,1,.32,1);
+  pointer-events:none;
+}
+#more-drawer.open{transform:translateY(0);pointer-events:all;}
+.more-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto .75rem;}
+.more-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.more-btn{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.75rem 1rem;border-radius:10px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.8);cursor:pointer;
+  font-family:'Bricolage Grotesque',sans-serif;font-size:.82rem;font-weight:600;
+  transition:all .15s;
+}
+.more-btn:hover,.more-btn.active{background:rgba(126,200,160,.15);border-color:rgba(126,200,160,.3);color:#7ec8a0;}
+.more-btn .more-ico{font-size:1.1rem;}
+#more-overlay{position:fixed;inset:0;z-index:185;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .3s;}
+#more-overlay.open{opacity:1;pointer-events:all;}
+
+/* ══════════════════════════════════
+   MOBILE HEADER (ay seçici sticky)
+══════════════════════════════════ */
+@media(max-width:640px){
+  /* Sabit header yerine mobil başlık */
+  header{
+    height:52px;
+    padding:0 16px;
+    position:fixed;top:0;left:0;right:0;z-index:100;
+  }
+  .logo{font-size:16px;}
+  #syncStatus span{display:none;}
+
+  /* Wrapper padding düzelt */
+  .wrapper{
+    padding: 74px 14px calc(80px + env(safe-area-inset-bottom));
+    max-width:100%;
+  }
+
+  /* Tab bar'ı gizle, mobile nav göster */
+  .tabs{display:none !important;}
+  #mobile-nav{display:flex;}
+
+  /* Kartlar tek sütun */
+  .cards{grid-template-columns:1fr 1fr !important;}
+  .cols{grid-template-columns:1fr !important;}
+  .stat-grid{grid-template-columns:1fr !important;}
+
+  /* Piyasa sayfası grid'leri */
+  #mktCards{grid-template-columns:1fr 1fr !important;}
+  #tab-piyasa > div[style*="grid-template-columns:repeat(3"]{
+    display:block !important;
+  }
+  #tab-piyasa > div[style*="grid-template-columns:1fr 1fr"]{
+    display:block !important;
+  }
+
+  /* Form alanları */
+  .r2,.r3,.r4{grid-template-columns:1fr 1fr !important;}
+  .r4{grid-template-columns:1fr 1fr !important;}
+
+  /* Butonlar daha büyük, thumb-friendly */
+  .btn-add{
+    padding:14px !important;
+    font-size:14px !important;
+    border-radius:10px !important;
+    min-height:48px;
+  }
+  .btn-sm{
+    padding:10px 16px !important;
+    font-size:13px !important;
+    min-height:40px;
+  }
+  .type-pill{
+    padding:10px 20px !important;
+    font-size:13px !important;
+    min-height:42px;
+  }
+  .field input,.field select{
+    padding:12px 14px !important;
+    font-size:15px !important;
+    min-height:46px;
+  }
+
+  /* Panel başlık */
+  .panel-head{padding:14px 16px !important;}
+  .panel-title{font-size:14px !important;}
+
+  /* İşlem satırları daha yüksek */
+  .txn{padding:13px 14px !important;gap:8px !important;}
+  .txn-ico{width:38px;height:38px;}
+  .txn-name{font-size:14px !important;}
+
+  /* Card değerleri */
+  .card-val{font-size:18px !important;}
+  .card{padding:14px 14px !important;}
+
+  /* Form box */
+  .form-box{padding:16px !important;border-radius:12px !important;}
+
+  /* Modal tam ekran alt sheet */
+  .modal{
+    border-radius:20px 20px 0 0 !important;
+    width:100% !important;
+    max-width:100% !important;
+    padding:20px 16px calc(20px + env(safe-area-inset-bottom)) !important;
+  }
+  .modal-overlay{align-items:flex-end !important;}
+
+  /* Toast yukarı değil aşağı */
+  #toast{top:auto !important;bottom:calc(80px + env(safe-area-inset-bottom) + 12px);}
+
+  /* Hisse ekleme satırı */
+  #tab-piyasa [style*="display:flex;gap:8px"]{flex-wrap:wrap;}
+
+  /* Arama input tam genişlik */
+  #searchQ{width:100% !important;margin-top:.5rem;}
+  .panel-head{flex-wrap:wrap;gap:.5rem;}
+
+  /* g-row mobil */
+  .g-row{padding:12px 14px !important;}
+  .mkt-row{padding:12px 14px !important;}
+  .b-row{padding:12px 14px !important;}
+}
 </style>
 </head>
 <body>
+
+<!-- PWA SPLASH SCREEN -->
+<div id="pwa-splash">
+  <div class="splash-logo">finans<em>hub</em></div>
+  <div class="splash-sub">Kişisel Finansal Yönetim</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+</div>
+
+<!-- MORE OVERLAY -->
+<div id="more-overlay" onclick="closeMoreDrawer()"></div>
+
+<!-- MORE DRAWER -->
+<div id="more-drawer">
+  <div class="more-handle"></div>
+  <div class="more-grid">
+    <button class="more-btn" onclick="mnavGo('piyasa',this)"><span class="more-ico">🌍</span>Piyasa</button>
+    <button class="more-btn" onclick="mnavGo('kasalar',this)"><span class="more-ico">🏧</span>Kasalar</button>
+    <button class="more-btn" onclick="mnavGo('borclar',this)"><span class="more-ico">💸</span>Borçlar</button>
+    <button class="more-btn" onclick="mnavGo('hedefler',this)"><span class="more-ico">🎯</span>Hedefler</button>
+    <button class="more-btn" onclick="mnavGo('abonelikler',this)"><span class="more-ico">📅</span>Abonelikler</button>
+    <button class="more-btn" onclick="mnavGo('butce',this)"><span class="more-ico">📋</span>Bütçe</button>
+    <button class="more-btn" onclick="mnavGo('istatistik',this)"><span class="more-ico">📈</span>İstatistik</button>
+    <button class="more-btn" onclick="mnavGo('ayarlar',this)"><span class="more-ico">⚙️</span>Ayarlar</button>
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav id="mobile-nav">
+  <button class="mnav-item active" id="mnav-ozet" onclick="mnavGo('ozet',this)">
+    <span class="mnav-icon">📊</span>
+    <span class="mnav-label">Özet</span>
+  </button>
+  <button class="mnav-item" id="mnav-islemler" onclick="mnavGo('islemler',this)">
+    <span class="mnav-icon">💳</span>
+    <span class="mnav-label">İşlemler</span>
+  </button>
+  <button class="mnav-item" id="mnav-varliklar" onclick="mnavGo('varliklar',this)">
+    <span class="mnav-icon">🏦</span>
+    <span class="mnav-label">Varlıklar</span>
+  </button>
+  <button class="mnav-item" id="mnav-more" onclick="openMoreDrawer()">
+    <span class="mnav-icon">⋯</span>
+    <span class="mnav-label">Daha Fazla</span>
+  </button>
+</nav>
 
 <header>
   <div class="logo">finans<em>hub</em></div>
@@ -844,56 +1046,31 @@ function rKasalar() {
   }
   hl.innerHTML=S.accounts.map(a=>{
     const bal=accBalance(a);
-    const allTxns=S.transactions.filter(t=>t.accountId===a.id).sort((x,y)=>new Date(y.date)-new Date(x.date));
+    const txnCount=S.transactions.filter(t=>t.accountId===a.id).length;
     const today=new Date();
-    const mTxns=allTxns.filter(t=>{const d=new Date(t.date);return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth();});
-    const mInc=mTxns.filter(t=>t.type==="inc").reduce((s,t)=>s+t.amount,0);
-    const mExp=mTxns.filter(t=>t.type==="exp").reduce((s,t)=>s+t.amount,0);
-    const txnRows=allTxns.map(t=>{
-      const cat=getCat(t.category);
-      return `<div class="acc-txn">
-        <div><div class="acc-txn-name">${t.name}</div><div class="acc-txn-cat">${cat.icon} ${cat.name}${t.note?" · "+t.note:""}</div></div>
-        <div class="acc-txn-date">${new Date(t.date).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})}</div>
-        <div class="acc-txn-amt ${t.type}">${t.type==="inc"?"+":"−"}${money(t.amount)}</div>
-        <div class="acc-txn-actions">
-          <button class="txn-btn" onclick="window.H.editTxn('${t.id}')">✎</button>
-          <button class="txn-btn del" onclick="window.H.delTxn('${t.id}')">✕</button>
-        </div>
-      </div>`;
-    }).join("");
-    return `<div style="border-bottom:1px solid var(--line)">
-      <div class="g-row" style="border-left:3px solid ${a.color||"var(--blue)"};cursor:pointer" onclick="window.H.toggleAccDetail('${a.id}')">
-        <div class="g-row-left">
-          <div class="g-row-title">${ACC_ICO[a.type]||"🏦"} ${a.name} <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:4px">▾ hareketler</span></div>
-          <div class="g-row-sub">Bu ay: <span style="color:var(--green)">+${money(mInc)}</span> / <span style="color:var(--red)">−${money(mExp)}</span> · toplam ${allTxns.length} işlem</div>
-        </div>
-        <div class="g-row-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <div class="g-row-val" style="color:${bal>=0?"var(--teal)":"var(--red)"}">${money(bal)}</div>
-          <div style="font-size:11px;color:var(--muted)">Başlangıç: ${money(a.initialBalance||0)}</div>
-          <div style="display:flex;gap:6px;margin-top:2px" onclick="event.stopPropagation()">
-            <button onclick="window.H.showAccTxns('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--blue);border-radius:6px;background:var(--blue-bg);font-size:12px;font-weight:600;cursor:pointer;color:var(--blue);font-family:inherit">📋 Hareketler</button>
-            <button onclick="window.H.editAccount('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--line);border-radius:6px;background:white;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);font-family:inherit">✎ Düzenle</button>
-            <button onclick="window.H.deleteAccount('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--red);border-radius:6px;background:var(--red-bg);font-size:12px;font-weight:600;cursor:pointer;color:var(--red);font-family:inherit">✕ Sil</button>
-          </div>
-        </div>
+    const monthTxns=S.transactions.filter(t=>{
+      if(t.accountId!==a.id) return false;
+      const d=new Date(t.date);
+      return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth();
+    });
+    const mInc=monthTxns.filter(t=>t.type==="inc").reduce((s,t)=>s+t.amount,0);
+    const mExp=monthTxns.filter(t=>t.type==="exp").reduce((s,t)=>s+t.amount,0);
+    return `<div class="g-row" style="border-left:3px solid ${a.color||"var(--blue)"}">
+      <div class="g-row-left">
+        <div class="g-row-title">${ACC_ICO[a.type]||"🏦"} ${a.name}</div>
+        <div class="g-row-sub">${a.type} · ${txnCount} işlem · Bu ay: <span style="color:var(--green)">+${money(mInc)}</span> / <span style="color:var(--red)">-${money(mExp)}</span></div>
       </div>
-      <div class="acc-detail" id="acc-detail-${a.id}">
-        <div class="acc-detail-head">
-          <span class="acc-detail-title">📋 ${a.name} — Tüm Hareketler</span>
-          <span class="acc-detail-summary">
-            <span style="color:var(--green)">Toplam Gelir: ${money(allTxns.filter(t=>t.type==="inc").reduce((s,t)=>s+t.amount,0))}</span>
-            <span style="color:var(--red)">Toplam Gider: ${money(allTxns.filter(t=>t.type==="exp").reduce((s,t)=>s+t.amount,0))}</span>
-          </span>
+      <div class="g-row-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div class="g-row-val" style="color:${bal>=0?"var(--teal)":"var(--red)"}">${money(bal)}</div>
+        <div style="font-size:11px;color:var(--muted)">Başlangıç: ${money(a.initialBalance||0)}</div>
+        <div style="display:flex;gap:6px;margin-top:2px">
+          <button onclick="window.H.showAccTxns('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--blue);border-radius:6px;background:var(--blue-bg);font-size:12px;font-weight:600;cursor:pointer;color:var(--blue);font-family:inherit">📋 Hareketler</button>
+          <button onclick="window.H.editAccount('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--line);border-radius:6px;background:white;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);font-family:inherit">✎ Düzenle</button>
+          <button onclick="window.H.deleteAccount('${a.id}')" style="padding:4px 10px;border:1.5px solid var(--red);border-radius:6px;background:var(--red-bg);font-size:12px;font-weight:600;cursor:pointer;color:var(--red);font-family:inherit">✕ Sil</button>
         </div>
-        ${txnRows||`<div class="empty"><div class="empty-text">Bu hesapta henüz işlem yok</div></div>`}
       </div>
     </div>`;
   }).join("");
-  // Render sonrası açık olanı geri aç
-  if(window._openAccId){
-    const el=$("acc-detail-"+window._openAccId);
-    if(el) el.classList.add("open");
-  }
 }
 
 function fillAccSelects(){
@@ -970,10 +1147,10 @@ function txnRow(t) {
       <div><div class="txn-name">${t.name}${accBadge}</div><div class="txn-cat">${t.note||"Dönüşüm"}</div></div>
       <div class="txn-date">${new Date(t.date).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})}</div>
       <div class="txn-amt ${t.type}" style="color:${col}">${isOut?"−":"+"}${money(t.amount)}</div>
-    <div class="txn-actions">
-      <button class="txn-btn" onclick="window.H.editTxn('${t.id}')">✎</button>
-      <button class="txn-btn del" onclick="window.H.delTxn('${t.id}')">✕</button>
-    </div>
+      <div class="txn-actions">
+        <button class="txn-btn" onclick="window.H.editTxn('${t.id}')">✎</button>
+        <button class="txn-btn del" onclick="window.H.delTxn('${t.id}')">✕</button>
+      </div>
     </div>`;
   }
   const c=getCat(t.category), col=gc(t.category);
@@ -1478,13 +1655,6 @@ window.H = {
   },
 
   // ── HESAP DÜZENLE ──
-  toggleAccDetail(id){
-    if(window._openAccId===id){ window._openAccId=null; }
-    else { window._openAccId=id; }
-    document.querySelectorAll(".acc-detail").forEach(d=>d.classList.remove("open"));
-    if(window._openAccId){ const el=$("acc-detail-"+window._openAccId); if(el) el.classList.add("open"); }
-  },
-
   showAccTxns(id){
     const a=S.accounts.find(x=>x.id===id); if(!a) return;
     const ACC_ICO={"banka":"🏦","nakit":"💵","dijital":"📱","kredi":"💳","diger":"📦"};
@@ -1492,33 +1662,27 @@ window.H = {
     const inc=allTxns.filter(t=>t.type==="inc").reduce((s,t)=>s+t.amount,0);
     const exp=allTxns.filter(t=>t.type==="exp").reduce((s,t)=>s+t.amount,0);
     const bal=accBalance(a);
-
-    const rows=allTxns.length ? allTxns.map(t=>{
+    const rows=allTxns.length?allTxns.map(t=>{
       const cat=getCat(t.category);
-      const sign=t.type==="inc"?"+":"−";
       const col=t.type==="inc"?"var(--green)":"var(--red)";
-      return `<div style="display:grid;grid-template-columns:1fr 80px 100px 52px;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px">
-        <div>
-          <div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</div>
-          <div style="font-size:11px;color:var(--muted)">${cat.icon} ${cat.name}${t.note?" · "+t.note:""}</div>
-        </div>
+      return `<div style="display:grid;grid-template-columns:1fr 75px 95px 52px;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px">
+        <div><div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</div><div style="font-size:11px;color:var(--muted)">${cat.icon} ${cat.name}${t.note?" · "+t.note:""}</div></div>
         <div style="font-size:11.5px;color:var(--muted);text-align:right">${new Date(t.date).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})}</div>
-        <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:${col};text-align:right">${sign}${money(t.amount)}</div>
+        <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:${col};text-align:right">${t.type==="inc"?"+":"−"}${money(t.amount)}</div>
         <div style="display:flex;gap:3px;justify-content:flex-end">
           <button class="txn-btn" onclick="window.H.editTxn('${t.id}');window.H.closeModal()">✎</button>
           <button class="txn-btn del" onclick="window.H.delTxn('${t.id}')">✕</button>
         </div>
       </div>`;
-    }).join("") : `<div style="padding:24px;text-align:center;color:var(--muted)">Bu hesapta henüz işlem yok</div>`;
-
+    }).join(""):`<div style="padding:24px;text-align:center;color:var(--muted)">Bu hesapta henüz işlem yok</div>`;
     window.H.openModal(
       `${ACC_ICO[a.type]||"🏦"} ${a.name} — Hareketler`,
-      `<div style="margin-bottom:14px;display:flex;gap:16px;padding:10px 14px;background:var(--paper2);border-radius:8px;font-size:13px">
+      `<div style="display:flex;gap:14px;flex-wrap:wrap;padding:10px 14px;background:var(--paper2);border-radius:8px;margin-bottom:14px;font-size:13px">
         <span>Bakiye: <strong style="color:${bal>=0?"var(--teal)":"var(--red)"}">${money(bal)}</strong></span>
-        <span style="color:var(--green)">Gelir: ${money(inc)}</span>
-        <span style="color:var(--red)">Gider: ${money(exp)}</span>
+        <span style="color:var(--green)">↑ ${money(inc)}</span>
+        <span style="color:var(--red)">↓ ${money(exp)}</span>
       </div>
-      <div style="max-height:420px;overflow-y:auto">${rows}</div>`,
+      <div style="max-height:400px;overflow-y:auto">${rows}</div>`,
       `<button class="btn-add" style="flex:1" onclick="window.H.closeModal()">Kapat</button>`
     );
   },
@@ -1841,12 +2005,91 @@ window.H = {
 };
 
 // Init
-window._openAccId=null;
 const today2=new Date().toISOString().split("T")[0];
 ["q_d","f_d"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
 window.addEventListener("resize",()=>rChart());
 initData();
 </script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/butce/service-worker.js');
+    });
+  }
+</script>
 
+<script>
+// ══════════════════════════════════
+// SPLASH SCREEN
+// ══════════════════════════════════
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('pwa-splash');
+    if (splash) splash.classList.add('hide');
+    setTimeout(() => { if(splash) splash.style.display='none'; }, 450);
+  }, 1400);
+});
+
+// ══════════════════════════════════
+// MOBILE NAV
+// ══════════════════════════════════
+const MNAV_MAP = {
+  ozet: 'mnav-ozet',
+  islemler: 'mnav-islemler',
+  varliklar: 'mnav-varliklar',
+};
+
+function mnavGo(tabId, el) {
+  // Tüm sayfaları gizle, ilgili sayfayı göster
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const page = document.getElementById('tab-' + tabId);
+  if (page) page.classList.add('active');
+
+  // H.tab ile Firebase render tetikle
+  if (window.H && window.H.tab) {
+    window.H.tab(tabId, document.createElement('button'));
+  }
+
+  // Mobile nav active state
+  document.querySelectorAll('.mnav-item').forEach(b => b.classList.remove('active'));
+  const navId = MNAV_MAP[tabId];
+  if (navId) {
+    document.getElementById(navId)?.classList.add('active');
+  } else {
+    document.getElementById('mnav-more')?.classList.add('active');
+  }
+
+  // More drawer içindeki aktif
+  document.querySelectorAll('.more-btn').forEach(b => b.classList.remove('active'));
+  if (el && el.classList && el.classList.contains('more-btn')) {
+    el.classList.add('active');
+  }
+
+  closeMoreDrawer();
+}
+
+function openMoreDrawer() {
+  document.getElementById('more-drawer').classList.add('open');
+  document.getElementById('more-overlay').classList.add('open');
+}
+
+function closeMoreDrawer() {
+  document.getElementById('more-drawer').classList.remove('open');
+  document.getElementById('more-overlay').classList.remove('open');
+}
+
+// İlk yüklemede özet sayfasını göster (mobilde)
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.innerWidth <= 640) {
+    setTimeout(() => {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const ozet = document.getElementById('tab-ozet');
+      if (ozet) ozet.classList.add('active');
+      document.getElementById('mnav-ozet')?.classList.add('active');
+    }, 200);
+  }
+});
+</script>
 </body>
 </html>
