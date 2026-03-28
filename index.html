@@ -888,6 +888,11 @@ function rKasalar() {
       </div>
     </div>`;
   }).join("");
+  // Render sonrası açık olanı geri aç
+  if(window._openAccId){
+    const el=$("acc-detail-"+window._openAccId);
+    if(el) el.classList.add("open");
+  }
 }
 
 function fillAccSelects(){
@@ -1473,12 +1478,18 @@ window.H = {
 
   // ── HESAP DÜZENLE ──
   toggleAccDetail(id){
-    const el=$("acc-detail-"+id);
-    if(!el) return;
-    const isOpen=el.classList.contains("open");
-    // Diğer açık olanları kapat
-    document.querySelectorAll(".acc-detail.open").forEach(d=>d.classList.remove("open"));
-    if(!isOpen) el.classList.add("open");
+    // State'i tut — render sonrası da açık kalsın
+    if(window._openAccId===id){
+      window._openAccId=null;
+    } else {
+      window._openAccId=id;
+    }
+    // Direkt DOM'u güncelle (render çağırmadan)
+    document.querySelectorAll(".acc-detail").forEach(d=>d.classList.remove("open"));
+    if(window._openAccId){
+      const el=$("acc-detail-"+window._openAccId);
+      if(el) el.classList.add("open");
+    }
   },
 
   editAccount(id){
@@ -1799,6 +1810,7 @@ window.H = {
 };
 
 // Init
+window._openAccId=null;
 const today2=new Date().toISOString().split("T")[0];
 ["q_d","f_d"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
 window.addEventListener("resize",()=>rChart());
