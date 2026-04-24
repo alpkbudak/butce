@@ -400,7 +400,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
   </button>
 </nav>
 
-<header>
+<header id="mainHeader" style="display:none">
   <div class="logo">finans<em>hub</em></div>
   <div class="header-mid">
     <button class="month-btn" onclick="window.H.changeMonth(-1)">‹</button>
@@ -413,7 +413,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 
 
 <!-- LOGIN EKRANI -->
-<div id="loginScreen" style="display:none">
+<div id="loginScreen">
   <div class="login-card">
     <div class="login-logo">finans<em>hub</em></div>
     <div class="login-sub">Kişisel finans takip sistemi</div>
@@ -430,7 +430,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
   </div>
 </div>
 
-<div class="wrapper">
+<div class="wrapper" id="mainWrapper" style="display:none">
   <div class="tabs">
     <button class="tab active"  onclick="window.H.tab('piyasa',this)">🌍 Piyasa</button>
     <button class="tab" onclick="window.H.tab('ozet',this)">📊 Özet</button>
