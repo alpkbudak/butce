@@ -408,7 +408,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
     <button class="month-btn" onclick="window.H.changeMonth(1)">›</button>
   </div>
   <div id="syncStatus"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">—</span></div>
-  <button onclick="window.H.logout()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">Çıkış</button>
+  <button onclick="window.doLogout()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">Çıkış</button>
 </header>
 
 
@@ -423,9 +423,9 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
     </div>
     <div class="login-field">
       <label>Şifre</label>
-      <input type="password" id="li_pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') window.H.login()">
+      <input type="password" id="li_pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') window.doLogin()">
     </div>
-    <button class="login-btn" id="li_btn" onclick="window.H.login()">Giriş Yap</button>
+    <button class="login-btn" id="li_btn" onclick="window.doLogin()">Giriş Yap</button>
     <div class="login-err" id="li_err"></div>
   </div>
 </div>
