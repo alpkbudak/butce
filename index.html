@@ -907,6 +907,15 @@ function doLogin() {
   btn.textContent = "Giriş yapılıyor...";
   btn.disabled = true;
   window._auth.signInWithEmailAndPassword(email, pass)
+    .then(() => {
+      // Başarılı giriş — ekranı aç ve veriyi yükle
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("mainHeader").style.display = "flex";
+      document.getElementById("mainWrapper").style.display = "block";
+      setTimeout(() => {
+        if(typeof window._initData === 'function') window._initData();
+      }, 100);
+    })
     .catch(e => {
       const msgs = {
         "auth/invalid-credential":"Email veya şifre hatalı",
@@ -1058,6 +1067,7 @@ function monthTxns() {
 
 // ── INIT ──
 async function initData() {
+  window._initData = initData;
   syncStatus("busy","Yükleniyor...");
   const snap = await getDocs(P("categories"));
   if(snap.empty){
@@ -2082,7 +2092,18 @@ window.H = {
 const today2=new Date().toISOString().split("T")[0];
 ["q_d","f_d"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
 window.addEventListener("resize",()=>rChart());
-// initData auth state change ile tetikleniyor
+// Sayfa yenilenince otomatik giriş kontrolü
+onAuthStateChanged(auth, user => {
+  if(user) {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("mainHeader").style.display = "flex";
+    document.getElementById("mainWrapper").style.display = "block";
+    if(!window._dataLoaded) {
+      window._dataLoaded = true;
+      initData();
+    }
+  }
+});
 </script>
 <script>
   if ('serviceWorker' in navigator) {
@@ -2178,6 +2199,15 @@ function doLogin() {
   btn.textContent = "Giriş yapılıyor...";
   btn.disabled = true;
   window._auth.signInWithEmailAndPassword(email, pass)
+    .then(() => {
+      // Başarılı giriş — ekranı aç ve veriyi yükle
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("mainHeader").style.display = "flex";
+      document.getElementById("mainWrapper").style.display = "block";
+      setTimeout(() => {
+        if(typeof window._initData === 'function') window._initData();
+      }, 100);
+    })
     .catch(e => {
       const msgs = {
         "auth/invalid-credential":"Email veya şifre hatalı",
