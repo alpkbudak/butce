@@ -1,4 +1,4 @@
-const CACHE_NAME = 'butce-v4';
+const CACHE_NAME = 'butce-v5';
 const ASSETS = [
   '/butce/',
   '/butce/index.html',
@@ -21,13 +21,34 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // HTML dosyalarını her zaman network'ten al, cache'den değil
-  if (e.request.mode === 'navigate' || e.request.url.endsWith('.html')) {
+  const url = e.request.url;
+
+  // Firebase, auth, dış API isteklerini cache'leme — direkt geçir
+  if (
+    url.includes('firebase') ||
+    url.includes('firestore') ||
+    url.includes('googleapis') ||
+    url.includes('gstatic') ||
+    url.includes('identitytoolkit') ||
+    url.includes('securetoken') ||
+    url.includes('yahoo') ||
+    url.includes('coingecko') ||
+    url.includes('allorigins') ||
+    url.includes('corsproxy') ||
+    url.includes('open.er-api')
+  ) {
+    return; // service worker müdahale etme
+  }
+
+  // HTML dosyalarını her zaman network'ten al
+  if (e.request.mode === 'navigate' || url.endsWith('.html')) {
     e.respondWith(
       fetch(e.request).catch(() => caches.match(e.request))
     );
     return;
   }
+
+  // Diğer statik dosyalar cache'den
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );
