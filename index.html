@@ -894,6 +894,38 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 <div id="toast"></div>
 
 
+
+<script>
+function doLogin() {
+  const email = document.getElementById("li_email").value.trim();
+  const pass  = document.getElementById("li_pass").value;
+  const errEl = document.getElementById("li_err");
+  const btn   = document.getElementById("li_btn");
+  errEl.textContent = "";
+  if(!email||!pass){ errEl.textContent="Email ve şifre gerekli"; return; }
+  if(!window._auth){ errEl.textContent="Sistem yükleniyor, bekleyin..."; return; }
+  btn.textContent = "Giriş yapılıyor...";
+  btn.disabled = true;
+  window._auth.signInWithEmailAndPassword(email, pass)
+    .catch(e => {
+      const msgs = {
+        "auth/invalid-credential":"Email veya şifre hatalı",
+        "auth/user-not-found":"Bu email kayıtlı değil",
+        "auth/wrong-password":"Şifre hatalı",
+        "auth/too-many-requests":"Çok fazla deneme, biraz bekle",
+        "auth/invalid-email":"Geçersiz email formatı"
+      };
+      errEl.textContent = msgs[e.code] || "Hata: "+e.message;
+      btn.textContent = "Giriş Yap";
+      btn.disabled = false;
+    });
+}
+
+function doLogout() {
+  if(!confirm("Çıkış yapmak istediğine emin misin?")) return;
+  if(window._auth) window._auth.signOut();
+}
+</script>
 </body>
 </html>
 
@@ -912,6 +944,10 @@ const FB = {
 const app = initializeApp(FB);
 const db  = getFirestore(app);
 const auth = getAuth(app);
+window._auth = {
+  signInWithEmailAndPassword: (email, pass) => signInWithEmailAndPassword(auth, email, pass),
+  signOut: () => fbSignOut(auth)
+};
 const UID = "alp";
 const P  = (col) => collection(db, `users/${UID}/${col}`);
 const D  = (col, id) => doc(db, `users/${UID}/${col}/${id}`);
@@ -2128,6 +2164,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 200);
   }
 });
+</script>
+
+<script>
+function doLogin() {
+  const email = document.getElementById("li_email").value.trim();
+  const pass  = document.getElementById("li_pass").value;
+  const errEl = document.getElementById("li_err");
+  const btn   = document.getElementById("li_btn");
+  errEl.textContent = "";
+  if(!email||!pass){ errEl.textContent="Email ve şifre gerekli"; return; }
+  if(!window._auth){ errEl.textContent="Sistem yükleniyor, bekleyin..."; return; }
+  btn.textContent = "Giriş yapılıyor...";
+  btn.disabled = true;
+  window._auth.signInWithEmailAndPassword(email, pass)
+    .catch(e => {
+      const msgs = {
+        "auth/invalid-credential":"Email veya şifre hatalı",
+        "auth/user-not-found":"Bu email kayıtlı değil",
+        "auth/wrong-password":"Şifre hatalı",
+        "auth/too-many-requests":"Çok fazla deneme, biraz bekle",
+        "auth/invalid-email":"Geçersiz email formatı"
+      };
+      errEl.textContent = msgs[e.code] || "Hata: "+e.message;
+      btn.textContent = "Giriş Yap";
+      btn.disabled = false;
+    });
+}
+
+function doLogout() {
+  if(!confirm("Çıkış yapmak istediğine emin misin?")) return;
+  if(window._auth) window._auth.signOut();
+}
 </script>
 </body>
 </html>
