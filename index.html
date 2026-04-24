@@ -336,6 +336,21 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
   .mkt-row{padding:12px 14px !important;}
   .b-row{padding:12px 14px !important;}
 }
+
+/* ── LOGIN ── */
+#loginScreen{position:fixed;inset:0;background:var(--ink);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--paper);border-radius:18px;padding:40px 36px;width:380px;max-width:100%;box-shadow:var(--shadow-lg);text-align:center}
+.login-logo{font-family:'Bricolage Grotesque',sans-serif;font-size:32px;font-weight:800;margin-bottom:4px}
+.login-logo em{color:var(--green);font-style:normal}
+.login-sub{color:var(--muted);font-size:13px;margin-bottom:28px}
+.login-field{margin-bottom:12px;text-align:left}
+.login-field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:4px}
+.login-field input{width:100%;padding:10px 13px;border:1.5px solid var(--line);border-radius:8px;background:var(--paper2);color:var(--ink);font-size:14px;font-family:inherit;transition:border .15s}
+.login-field input:focus{outline:none;border-color:var(--ink)}
+.login-btn{width:100%;padding:12px;background:var(--ink);color:var(--paper);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bricolage Grotesque',sans-serif;margin-top:6px;transition:background .15s}
+.login-btn:hover{background:var(--ink2)}
+.login-btn:disabled{opacity:.6;cursor:not-allowed}
+.login-err{color:var(--red);font-size:12px;margin-top:8px;min-height:16px}
 </style>
 </head>
 <body>
@@ -393,7 +408,27 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
     <button class="month-btn" onclick="window.H.changeMonth(1)">›</button>
   </div>
   <div id="syncStatus"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">—</span></div>
+  <button onclick="window.H.logout()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">Çıkış</button>
 </header>
+
+
+<!-- LOGIN EKRANI -->
+<div id="loginScreen" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">finans<em>hub</em></div>
+    <div class="login-sub">Kişisel finans takip sistemi</div>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="li_email" placeholder="email@example.com" onkeydown="if(event.key==='Enter') document.getElementById('li_pass').focus()">
+    </div>
+    <div class="login-field">
+      <label>Şifre</label>
+      <input type="password" id="li_pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') window.H.login()">
+    </div>
+    <button class="login-btn" id="li_btn" onclick="window.H.login()">Giriş Yap</button>
+    <div class="login-err" id="li_err"></div>
+  </div>
+</div>
 
 <div class="wrapper">
   <div class="tabs">
@@ -865,6 +900,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, collection, onSnapshot, setDoc, deleteDoc, getDocs, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const FB = {
   apiKey:"AIzaSyCLfCUmfz2G4ctjrSlg0c3jEDR_nOF_-RA",
@@ -873,7 +909,9 @@ const FB = {
   messagingSenderId:"924090596352",
   appId:"1:924090596352:web:134778b8f8d390c8016ce5"
 };
-const db = getFirestore(initializeApp(FB));
+const app = initializeApp(FB);
+const db  = getFirestore(app);
+const auth = getAuth(app);
 const UID = "alp";
 const P  = (col) => collection(db, `users/${UID}/${col}`);
 const D  = (col, id) => doc(db, `users/${UID}/${col}/${id}`);
@@ -2008,7 +2046,7 @@ window.H = {
 const today2=new Date().toISOString().split("T")[0];
 ["q_d","f_d"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
 window.addEventListener("resize",()=>rChart());
-initData();
+// initData auth state change ile tetikleniyor
 </script>
 <script>
   if ('serviceWorker' in navigator) {
