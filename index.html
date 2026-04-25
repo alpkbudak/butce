@@ -338,20 +338,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
   .b-row{padding:12px 14px !important;}
 }
 
-/* ── LOGIN ── */
-#loginScreen{position:fixed;inset:0;background:var(--ink);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
-.login-card{background:var(--paper);border-radius:18px;padding:40px 36px;width:380px;max-width:100%;box-shadow:var(--shadow-lg);text-align:center}
-.login-logo{font-family:'Bricolage Grotesque',sans-serif;font-size:32px;font-weight:800;margin-bottom:4px}
-.login-logo em{color:var(--green);font-style:normal}
-.login-sub{color:var(--muted);font-size:13px;margin-bottom:28px}
-.login-field{margin-bottom:12px;text-align:left}
-.login-field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:4px}
-.login-field input{width:100%;padding:10px 13px;border:1.5px solid var(--line);border-radius:8px;background:var(--paper2);color:var(--ink);font-size:14px;font-family:inherit;transition:border .15s}
-.login-field input:focus{outline:none;border-color:var(--ink)}
-.login-btn{width:100%;padding:12px;background:var(--ink);color:var(--paper);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Bricolage Grotesque',sans-serif;margin-top:6px;transition:background .15s}
-.login-btn:hover{background:var(--ink2)}
-.login-btn:disabled{opacity:.6;cursor:not-allowed}
-.login-err{color:var(--red);font-size:12px;margin-top:8px;min-height:16px}
+
 
 .period-opt{padding:8px 14px;font-size:13px;cursor:pointer;border-radius:6px;color:var(--ink);transition:background .1s}
 .period-opt:hover{background:var(--paper2)}
@@ -417,7 +404,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
   </button>
 </nav>
 
-<header id="mainHeader" style="display:none">
+<header>
   <div class="logo">finans<em>hub</em></div>
   <div class="header-mid" style="position:relative">
     <button id="periodBtn" onclick="window.H.togglePeriodMenu()" style="background:rgba(255,255,255,.1);border:none;color:var(--paper);padding:5px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;font-family:'Bricolage Grotesque',sans-serif;display:flex;align-items:center;gap:6px;transition:background .15s">
@@ -437,31 +424,10 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
   </div>
   <div style="display:flex;align-items:center;gap:10px">
     <div id="syncStatus"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">—</span></div>
-    <span id="headerEmail" style="font-size:11px;color:rgba(255,255,255,.6);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-    <button onclick="window.doLogout()" style="background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">Çıkış</button>
   </div>
 </header>
 
-
-<!-- LOGIN EKRANI -->
-<div id="loginScreen">
-  <div class="login-card">
-    <div class="login-logo">finans<em>hub</em></div>
-    <div class="login-sub">Kişisel finans takip sistemi</div>
-    <div class="login-field">
-      <label>Email</label>
-      <input type="email" id="li_email" placeholder="email@example.com" onkeydown="if(event.key==='Enter') document.getElementById('li_pass').focus()">
-    </div>
-    <div class="login-field">
-      <label>Şifre</label>
-      <input type="password" id="li_pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') window.doLogin()">
-    </div>
-    <button class="login-btn" id="li_btn" onclick="window.doLogin()">Giriş Yap</button>
-    <div class="login-err" id="li_err"></div>
-  </div>
-</div>
-
-<div class="wrapper" id="mainWrapper" style="display:none">
+<div class="wrapper">
   <div class="tabs">
     <button class="tab active"  onclick="window.H.tab('piyasa',this)">🌍 Piyasa</button>
     <button class="tab" onclick="window.H.tab('ozet',this)">📊 Özet</button>
@@ -997,34 +963,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 
 
 
-<script>
-function doLogin() {
-  const email = document.getElementById("li_email").value.trim();
-  const pass  = document.getElementById("li_pass").value;
-  const errEl = document.getElementById("li_err");
-  const btn   = document.getElementById("li_btn");
-  errEl.textContent = "";
-  if(!email||!pass){ errEl.textContent="Email ve şifre gerekli"; return; }
 
-  // Basit şifre kontrolü — Firebase'i beklemeden aç
-  const VALID_EMAIL = "yunuskbudak@gmail.com"; // BU SATIRLARI DEĞİŞTİR
-  const VALID_PASS  = "Deadelus23!";    // BU SATIRLARI DEĞİŞTİR
-
-  if(email === VALID_EMAIL && pass === VALID_PASS) {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("mainHeader").style.display = "flex";
-    document.getElementById("mainWrapper").style.display = "block";
-    if(typeof window._initData === 'function') window._initData();
-    return;
-  }
-  errEl.textContent = "Email veya şifre hatalı";
-}
-
-function doLogout() {
-  if(!confirm("Çıkış yapmak istediğine emin misin?")) return;
-  if(window._auth) window._auth.signOut();
-}
-</script>
 
 <div id="mobileNav">
   <div class="mnav-items">
@@ -1045,7 +984,6 @@ function doLogout() {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, collection, onSnapshot, setDoc, deleteDoc, getDocs, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut as fbSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const FB = {
   apiKey:"AIzaSyCLfCUmfz2G4ctjrSlg0c3jEDR_nOF_-RA",
@@ -1056,11 +994,6 @@ const FB = {
 };
 const app = initializeApp(FB);
 const db  = getFirestore(app);
-const auth = getAuth(app);
-window._auth = {
-  signInWithEmailAndPassword: (email, pass) => signInWithEmailAndPassword(auth, email, pass),
-  signOut: () => fbSignOut(auth)
-};
 const UID = "alp";
 const P  = (col) => collection(db, `users/${UID}/${col}`);
 const D  = (col, id) => doc(db, `users/${UID}/${col}/${id}`);
@@ -1179,7 +1112,6 @@ function monthTxns() {
 
 // ── INIT ──
 async function initData() {
-  window._initData = initData;
   syncStatus("busy","Yükleniyor...");
   const snap = await getDocs(P("categories"));
   if(snap.empty){
@@ -2319,18 +2251,7 @@ setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":""
 const today2=new Date().toISOString().split("T")[0];
 ["q_d","f_d"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
 window.addEventListener("resize",()=>rChart());
-// Sayfa yenilenince otomatik giriş kontrolü
-onAuthStateChanged(auth, user => {
-  if(user) {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("mainHeader").style.display = "flex";
-    document.getElementById("mainWrapper").style.display = "block";
-    if(!window._dataLoaded) {
-      window._dataLoaded = true;
-      initData();
-    }
-  }
-});
+initData();
 </script>
 <script>
   if ('serviceWorker' in navigator) {
@@ -2414,34 +2335,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<script>
-function doLogin() {
-  const email = document.getElementById("li_email").value.trim();
-  const pass  = document.getElementById("li_pass").value;
-  const errEl = document.getElementById("li_err");
-  const btn   = document.getElementById("li_btn");
-  errEl.textContent = "";
-  if(!email||!pass){ errEl.textContent="Email ve şifre gerekli"; return; }
 
-  // Basit şifre kontrolü — Firebase'i beklemeden aç
-  const VALID_EMAIL = "alp@finansalhub.com"; // BU SATIRLARI DEĞİŞTİR
-  const VALID_PASS  = "Finansalhub2024!";    // BU SATIRLARI DEĞİŞTİR
-
-  if(email === VALID_EMAIL && pass === VALID_PASS) {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("mainHeader").style.display = "flex";
-    document.getElementById("mainWrapper").style.display = "block";
-    if(typeof window._initData === 'function') window._initData();
-    return;
-  }
-  errEl.textContent = "Email veya şifre hatalı";
-}
-
-function doLogout() {
-  if(!confirm("Çıkış yapmak istediğine emin misin?")) return;
-  if(window._auth) window._auth.signOut();
-}
-</script>
 
 <div id="mobileNav">
   <div class="mnav-items">
