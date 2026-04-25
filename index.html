@@ -995,7 +995,7 @@ const DEFAULT_CATS = [
 const S = {
   transactions:[], categories:[...DEFAULT_CATS], budgets:{},
   debts:[], installments:[], creditCards:[],
-  assets:[], goals:[], subscriptions:[], stocks:[], accounts:[]
+  assets:[], goals:[], subscriptions:[], stocks:[], accounts:[], stockPositions:[]
 };
 let curMonth = new Date(); curMonth.setDate(1);
 let qType = "exp", fType = "exp";
@@ -1210,7 +1210,7 @@ function fillPeriodOpts() {
 
 function rStockPort() {
   const sc=$("stockPortCards"), sl=$("stockPortList"); if(!sc||!sl) return;
-  const pos=S.stockPositions;
+  const pos=S.stockPositions||[];
   const totalInv=pos.reduce((s,p)=>s+(p.buyPrice*p.qty+(p.commission||0)),0);
   const sectors=[...new Set(pos.map(p=>p.sector).filter(Boolean))];
   sc.innerHTML=`
@@ -1774,6 +1774,52 @@ setInterval(()=>MKT.fetch(),60000);
 // WINDOW.H — all public actions
 // ══════════════════════════════════════════
 window.H = {
+  varlikTab(which, btn){
+    document.querySelectorAll("[id^='vt-']").forEach(b=>{
+      b.style.background="none"; b.style.borderColor="var(--line)"; b.style.color="var(--muted)";
+    });
+    if(btn){ btn.style.background="var(--ink)"; btn.style.borderColor="var(--ink)"; btn.style.color="white"; }
+    const a=$("vp-assets"), s=$("vp-stocks");
+    if(a) a.style.display=which==="assets"?"block":"none";
+    if(s) s.style.display=which==="stocks"?"block":"none";
+  },
+  async addStockPos(){
+    const sym=val("sp_sym").trim().toUpperCase();
+    const buyPrice=num("sp_buyPrice"), qty=num("sp_qty");
+    if(!sym||!buyPrice||!qty){toast("Sembol, fiyat ve adet gerekli","err");return;}
+    await setDoc(D("stockPositions",uid2()),{
+      sym, exchange:val("sp_exchange"), name:val("sp_name").trim(),
+      sector:val("sp_sector"), spType:val("sp_type")||"Hisse",
+      buyPrice, qty, date:val("sp_date"),
+      target:num("sp_target"), stop:num("sp_stop"),
+      commission:num("sp_commission"), note:val("sp_note").trim(),
+      createdAt:serverTimestamp()
+    });
+    clr("sp_sym","sp_name","sp_buyPrice","sp_qty","sp_target","sp_stop","sp_commission","sp_note");
+    toast("Pozisyon eklendi ✓","ok");
+  },
+  editStockPos(id){
+    const p=S.stockPositions.find(x=>x.id===id); if(!p) return;
+    $("sp_sym").value=p.sym||""; $("sp_exchange").value=p.exchange||"BIST";
+    $("sp_name").value=p.name||""; $("sp_sector").value=p.sector||"";
+    if($("sp_type")) $("sp_type").value=p.spType||"Hisse";
+    $("sp_buyPrice").value=p.buyPrice||""; $("sp_qty").value=p.qty||"";
+    $("sp_date").value=p.date||""; $("sp_target").value=p.target||"";
+    $("sp_stop").value=p.stop||""; $("sp_commission").value=p.commission||"";
+    $("sp_note").value=p.note||"";
+    window.H.varlikTab("stocks",$("vt-stocks"));
+    const btn=$("spAddBtn"); if(!btn) return;
+    btn.textContent="Güncelle";
+    btn.onclick=async()=>{
+      const sym=val("sp_sym").trim().toUpperCase();
+      const buyPrice=num("sp_buyPrice"),qty=num("sp_qty");
+      if(!sym||!buyPrice||!qty){toast("Gerekli alanları doldur","err");return;}
+      await setDoc(D("stockPositions",id),{...p,sym,exchange:val("sp_exchange"),name:val("sp_name").trim(),sector:val("sp_sector"),spType:val("sp_type")||"Hisse",buyPrice,qty,date:val("sp_date"),target:num("sp_target"),stop:num("sp_stop"),commission:num("sp_commission"),note:val("sp_note").trim()});
+      clr("sp_sym","sp_name","sp_buyPrice","sp_qty","sp_target","sp_stop","sp_commission","sp_note");
+      btn.textContent="Pozisyon Ekle"; btn.onclick=()=>window.H.addStockPos();
+      toast("Güncellendi ✓","ok");
+    };
+  },
   // ── MODAL ──
   openModal(title, bodyHtml, footerHtml){
     $("modalTitle").textContent=title;
