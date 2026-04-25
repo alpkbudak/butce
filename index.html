@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Bütçe">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WALLET+</title>
+<title>Finansal Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -89,6 +89,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 .type-pill{padding:5px 14px;border-radius:20px;border:1.5px solid var(--line);background:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;color:var(--muted)}
 .type-pill.sel-exp{background:var(--red-bg);border-color:var(--red);color:var(--red)}
 .type-pill.sel-inc{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.type-pill.sel-transfer{background:#f0f9ff;border-color:#0284c7;color:#0284c7}
 .field{margin-bottom:9px}
 .field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:3px}
 .field input,.field select{width:100%;padding:8px 11px;border:1.5px solid var(--line);border-radius:7px;background:var(--paper);color:var(--ink);font-size:13px;font-family:inherit;transition:border .15s;-webkit-appearance:none}
@@ -348,6 +349,10 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
   #mainTabs{display:none}
   .wrapper{padding-bottom:max(80px,calc(70px + env(safe-area-inset-bottom)))}
 }
+
+.period-opt{padding:8px 14px;font-size:13px;cursor:pointer;border-radius:6px;color:var(--ink);transition:background .1s}
+.period-opt:hover{background:var(--paper2)}
+.period-opt.active{background:var(--ink);color:white;font-weight:600}
 </style>
 </head>
 <body>
@@ -399,10 +404,14 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 
 <header>
   <div class="logo">finans<em>hub</em></div>
-  <div class="header-mid">
-    <button class="month-btn" onclick="window.H.changeMonth(-1)">‹</button>
-    <div id="monthLabel"></div>
-    <button class="month-btn" onclick="window.H.changeMonth(1)">›</button>
+  <div class="header-mid" style="position:relative">
+    <button id="periodBtn" onclick="window.H.togglePeriodMenu()" style="background:rgba(255,255,255,.1);border:none;color:var(--paper);padding:5px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;font-family:'Bricolage Grotesque',sans-serif;display:flex;align-items:center;gap:6px">
+      <span id="periodLabel">Tüm Zamanlar</span> ▾
+    </button>
+    <div id="periodMenu" style="display:none;position:absolute;top:38px;left:0;background:white;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);z-index:200;min-width:200px;max-height:320px;overflow-y:auto;padding:4px">
+      <div class="period-opt active" data-period="all" onclick="window.H.setPeriod('all',this)">🗓 Tüm Zamanlar</div>
+      <div id="periodYearOpts"></div>
+    </div>
   </div>
   <div id="syncStatus"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">—</span></div>
 </header>
@@ -566,6 +575,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
           <div class="type-pills">
             <button class="type-pill sel-exp" id="qPillExp" onclick="window.H.setQType('exp')">− Gider</button>
             <button class="type-pill" id="qPillInc" onclick="window.H.setQType('inc')">+ Gelir</button>
+            <button class="type-pill" id="qPillTrf" onclick="window.H.setQType('transfer')">↔ Transfer</button>
           </div>
           <!-- Normal form (gelir/gider) -->
           <div id="q_normal_fields">
@@ -631,6 +641,7 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
       <div class="type-pills">
         <button class="type-pill sel-exp" id="fPillExp" onclick="window.H.setFType('exp')">− Gider</button>
         <button class="type-pill" id="fPillInc" onclick="window.H.setFType('inc')">+ Gelir</button>
+        <button class="type-pill" id="fPillTrf" onclick="window.H.setFType('transfer')">↔ Transfer</button>
       </div>
       <div class="r4">
         <div class="field"><label>Açıklama</label><input id="f_n" placeholder="Açıklama..."></div>
@@ -706,6 +717,11 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 
   <!-- VARLIKLAR -->
   <div id="tab-varliklar" class="page">
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button id="vt-assets" onclick="window.H.varlikTab('assets',this)" style="padding:6px 14px;border:1.5px solid var(--ink);border-radius:6px;background:var(--ink);color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🏦 Varlıklar</button>
+      <button id="vt-stocks" onclick="window.H.varlikTab('stocks',this)" style="padding:6px 14px;border:1.5px solid var(--line);border-radius:6px;background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📈 Hisse Portföyü</button>
+    </div>
+    <div id="vp-assets">
     <div class="cards" id="assetCards"></div>
     <div class="cols">
       <div class="panel"><div class="panel-head"><div class="panel-title">Varlıklarım</div></div><div id="assetList"></div></div>
@@ -757,6 +773,69 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
   </div>
 
   <!-- HEDEFLER -->
+    </div><!-- /vp-assets -->
+    <div id="vp-stocks" style="display:none">
+      <div class="cards" id="stockPortCards"></div>
+      <div class="cols">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">📈 Hisse Portföyüm</div><span id="stockPortLastUpd" style="font-size:11px;color:var(--muted)"></span></div>
+          <div id="stockPortList"></div>
+        </div>
+        <div class="form-box">
+          <div class="form-title">Pozisyon Ekle</div>
+          <div class="r2">
+            <div class="field"><label>Sembol</label><input id="sp_sym" placeholder="THYAO, AAPL..." style="text-transform:uppercase"></div>
+            <div class="field"><label>Borsa</label>
+              <select id="sp_exchange">
+                <option value="BIST">🇹🇷 BIST</option>
+                <option value="NYSE">🇺🇸 NYSE</option>
+                <option value="NASDAQ">🇺🇸 NASDAQ</option>
+                <option value="OTHER">🌍 Diğer</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>Şirket Adı</label><input id="sp_name" placeholder="Türk Hava Yolları..."></div>
+          <div class="r2">
+            <div class="field"><label>Sektör</label>
+              <select id="sp_sector">
+                <option value="">Seç...</option>
+                <option value="Havacılık">✈️ Havacılık</option>
+                <option value="Bankacılık">🏦 Bankacılık</option>
+                <option value="Enerji">⚡ Enerji</option>
+                <option value="Teknoloji">💻 Teknoloji</option>
+                <option value="Sanayi">🏭 Sanayi</option>
+                <option value="Perakende">🛒 Perakende</option>
+                <option value="İnşaat">🏗️ İnşaat</option>
+                <option value="Gıda">🍎 Gıda</option>
+                <option value="Sağlık">💊 Sağlık</option>
+                <option value="Diğer">📦 Diğer</option>
+              </select>
+            </div>
+            <div class="field"><label>Hisse Tipi</label>
+              <select id="sp_type">
+                <option value="Hisse">📊 Hisse Senedi</option>
+                <option value="ETF">🗂️ ETF</option>
+                <option value="Fon">💼 Yatırım Fonu</option>
+              </select>
+            </div>
+          </div>
+          <div class="r3">
+            <div class="field"><label>Alış Fiyatı ₺</label><input id="sp_buyPrice" type="number" placeholder="0.00" inputmode="decimal"></div>
+            <div class="field"><label>Adet / Lot</label><input id="sp_qty" type="number" placeholder="0" inputmode="decimal"></div>
+            <div class="field"><label>Alış Tarihi</label><input id="sp_date" type="date"></div>
+          </div>
+          <div class="r3">
+            <div class="field"><label>Hedef Fiyat ₺</label><input id="sp_target" type="number" placeholder="0.00" inputmode="decimal"></div>
+            <div class="field"><label>Stop-Loss ₺</label><input id="sp_stop" type="number" placeholder="0.00" inputmode="decimal"></div>
+            <div class="field"><label>Komisyon ₺</label><input id="sp_commission" type="number" placeholder="0" inputmode="decimal"></div>
+          </div>
+          <div class="field"><label>Notlar / Strateji</label><input id="sp_note" placeholder="Neden aldın, hedef, strateji..."></div>
+          <button class="btn-add" id="spAddBtn" onclick="window.H.addStockPos()">Pozisyon Ekle</button>
+        </div>
+      </div>
+    </div><!-- /vp-stocks -->
+  </div><!-- /tab-varliklar -->
+
   <div id="tab-hedefler" class="page">
     <div class="cols">
       <div class="panel"><div class="panel-head"><div class="panel-title">Finansal Hedeflerim</div></div><div id="goalList"></div></div>
@@ -920,6 +999,7 @@ const S = {
 };
 let curMonth = new Date(); curMonth.setDate(1);
 let qType = "exp", fType = "exp";
+let activePeriod = "all";
 
 const $   = id => document.getElementById(id);
 const val = id => $(id)?.value || "";
@@ -998,10 +1078,14 @@ function toast(msg, type="") {
   setTimeout(()=>el.classList.remove("show"),2600);
 }
 function monthTxns() {
-  const y=curMonth.getFullYear(), m=curMonth.getMonth();
-  return S.transactions.filter(t=>{
-    const d=new Date(t.date); return d.getFullYear()===y && d.getMonth()===m;
-  }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  let txns;
+  if(activePeriod==="all"){
+    txns=[...S.transactions];
+  } else {
+    const [py,pm]=activePeriod.split("-").map(Number);
+    txns=S.transactions.filter(t=>{const d=new Date(t.date);return d.getFullYear()===py&&d.getMonth()===(pm-1);});
+  }
+  return txns.sort((a,b)=>new Date(b.date)-new Date(a.date));
 }
 
 // ── INIT ──
@@ -1023,6 +1107,7 @@ async function initData() {
   onSnapshot(P("goals"),         s=>{S.goals         =s.docs.map(d=>({id:d.id,...d.data()}));render();});
   onSnapshot(P("subscriptions"), s=>{S.subscriptions =s.docs.map(d=>({id:d.id,...d.data()}));render();});
   onSnapshot(P("accounts"), s=>{S.accounts=s.docs.map(d=>({id:d.id,...d.data()}));render();fillAccSelects();});
+  onSnapshot(P("stockPositions"), s=>{S.stockPositions=s.docs.map(d=>({id:d.id,...d.data()}));rStockPort();});
   onSnapshot(P("stocks"), s=>{
     S.stocks=s.docs.map(d=>({id:d.id,...d.data()}));
     render();
@@ -1107,10 +1192,63 @@ function fillAccSelects(){
   });
 }
 
+
+function fillPeriodOpts() {
+  const el=$("periodYearOpts"); if(!el) return;
+  const months=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+  const currentYear=new Date().getFullYear();
+  let html="";
+  for(let y=currentYear;y>=currentYear-2;y--){
+    html+=`<div style="padding:6px 10px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;border-top:1px solid var(--line);margin-top:4px">${y}</div>`;
+    months.forEach((m,i)=>{
+      const val=`${y}-${String(i+1).padStart(2,"0")}`;
+      html+=`<div class="period-opt" data-period="${val}" onclick="window.H.setPeriod('${val}',this)">${m}</div>`;
+    });
+  }
+  el.innerHTML=html;
+}
+
+function rStockPort() {
+  const sc=$("stockPortCards"), sl=$("stockPortList"); if(!sc||!sl) return;
+  const pos=S.stockPositions;
+  const totalInv=pos.reduce((s,p)=>s+(p.buyPrice*p.qty+(p.commission||0)),0);
+  const sectors=[...new Set(pos.map(p=>p.sector).filter(Boolean))];
+  sc.innerHTML=`
+    <div class="card c-blue"><div class="card-tag">💰 Toplam Yatırım</div><div class="card-val">${money(totalInv)}</div><div class="card-sub">${pos.length} pozisyon</div></div>
+    <div class="card c-purple"><div class="card-tag">🏭 Sektörler</div><div class="card-val" style="font-size:15px">${sectors.slice(0,2).join(", ")||"—"}</div><div class="card-sub">${sectors.length} sektör</div></div>`;
+  if(!pos.length){sl.innerHTML=`<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">Henüz pozisyon eklenmedi</div></div>`;return;}
+  sl.innerHTML=`
+    <div style="display:grid;grid-template-columns:90px 1fr 90px 80px 100px 90px 52px;align-items:center;gap:8px;padding:8px 18px;border-bottom:2px solid var(--line);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase">
+      <div>Sembol</div><div>Şirket</div><div style="text-align:right">Alış</div><div style="text-align:right">Adet</div><div style="text-align:right">Maliyet</div><div style="text-align:right">Hedef/Stop</div><div></div>
+    </div>
+    ${pos.map(p=>{
+      const cost=p.buyPrice*p.qty+(p.commission||0);
+      const exch=p.exchange==="BIST"?"🇹🇷":p.exchange==="NYSE"||p.exchange==="NASDAQ"?"🇺🇸":"🌍";
+      return `<div style="display:grid;grid-template-columns:90px 1fr 90px 80px 100px 90px 52px;align-items:center;gap:8px;padding:10px 18px;border-bottom:1px solid var(--line);font-size:13px">
+        <div><div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700">${p.sym}</div><div style="font-size:11px;color:var(--muted)">${exch} ${p.exchange}</div></div>
+        <div><div style="font-weight:500">${p.name||p.sym}</div><div style="font-size:11px;color:var(--muted)">${p.sector||""}${p.spType?" · "+p.spType:""}</div></div>
+        <div style="text-align:right;font-weight:600">${money(p.buyPrice)}</div>
+        <div style="text-align:right">${p.qty}</div>
+        <div style="text-align:right;font-weight:700;color:var(--blue)">${money(cost)}</div>
+        <div style="text-align:right;font-size:12px;line-height:1.6">${p.target?`<span style="color:var(--green)">▲${money(p.target)}</span><br>`:""}${p.stop?`<span style="color:var(--red)">▼${money(p.stop)}</span>`:""}</div>
+        <div style="display:flex;gap:3px;justify-content:flex-end">
+          <button class="txn-btn" onclick="window.H.editStockPos('${p.id}')">✎</button>
+          <button class="txn-btn del" onclick="window.H.delDoc('stockPositions','${p.id}')">✕</button>
+        </div>
+      </div>`;
+    }).join("")}
+    <div style="padding:10px 18px;border-top:2px solid var(--line);display:flex;justify-content:space-between;font-size:13px;background:var(--paper)">
+      <span style="font-weight:600">Toplam</span>
+      <span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:var(--blue)">${money(totalInv)}</span>
+    </div>`;
+}
+
 function render() {
-  const lbl=curMonth.toLocaleString("tr-TR",{month:"long",year:"numeric"});
-  const ml=$("monthLabel"); if(ml) ml.textContent=lbl;
-  rKasalar(); rNetWorth(); rCards(); rRecent(); rCatTags();
+  const pl=$("periodLabel");
+  if(pl) pl.textContent=activePeriod==="all"?"Tüm Zamanlar":new Date(activePeriod+"-01").toLocaleString("tr-TR",{month:"long",year:"numeric"});
+  if(!window._periodFilled){window._periodFilled=true;fillPeriodOpts();}
+  const ml=$("monthLabel"); if(ml) ml.textContent="";
+  rKasalar(); rNetWorth(); rCards(); rRecent(); rCatTags(); rStockPort();
   rTxns(); rBudget(); rChart(); rStats();
   rDebts(); rInstallments(); rCreditCards();
   rAssets(); rGoals(); rSubs();
@@ -1776,11 +1914,21 @@ window.H = {
     render();
   },
   changeMonth(d){curMonth.setMonth(curMonth.getMonth()+d);render();},
-  setQType(t){qType=t;$("qPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");$("qPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");fillSelects();},
-  setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");$("fPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");fillSelects();},
+setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");$("fPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");fillSelects();},
   renderTxns:rTxns,
 
   async addTxn(form){
+    const ct=form==="quick"?qType:fType;
+    if(ct==="transfer"){
+      const amount=form==="quick"?num("q_a"):num("f_a");
+      const date=form==="quick"?val("q_d"):val("f_d");
+      const accId=form==="quick"?val("q_acc"):val("f_acc");
+      const note=form==="quick"?"":val("f_note");
+      if(!amount||!date||!accId){toast("Tutar, tarih ve hesap gerekli","err");return;}
+      await setDoc(D("transactions",uid2()),{name:"Transfer",amount,date,type:"transfer",category:"transfer",note,accountId:accId,createdAt:serverTimestamp()});
+      if(form==="quick")clr("q_a"); else clr("f_a","f_note");
+      toast("Transfer kaydedildi ✓","ok"); return;
+    }
     const p=form==="quick"
       ?{n:"q_n",a:"q_a",d:"q_d",c:"q_c",note:null,acc:"q_acc",type:qType}
       :{n:"f_n",a:"f_a",d:"f_d",c:"f_c",note:"f_note",acc:"f_acc",type:fType};
