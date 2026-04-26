@@ -1259,7 +1259,8 @@ function render() {
 
 function rNetWorth() {
   const accountTotal=S.accounts.reduce((s,a)=>s+accBalance(a),0);
-  const ta=S.assets.reduce((s,a)=>s+(assetDisplay(a).tl),0)+accountTotal;
+  const stockTotal=(S.stockPositions||[]).reduce((s,p)=>s+(p.buyPrice*p.qty+(p.commission||0)),0);
+  const ta=S.assets.reduce((s,a)=>s+(assetDisplay(a).tl),0)+accountTotal+stockTotal;
   const td=S.debts.filter(d=>!d.paid).reduce((s,d)=>s+d.amount,0);
   const ti=S.installments.reduce((s,i)=>s+(i.monthly*i.remaining),0);
   const tc=S.creditCards.reduce((s,c)=>s+c.balance,0);
@@ -1464,11 +1465,32 @@ function rCreditCards(){
 
 function rAssets(){
   const ac=$("assetCards"),al=$("assetList");if(!ac||!al)return;
-  const total=S.assets.reduce((s,a)=>s+(assetDisplay(a).tl),0);
-  const bt={};S.assets.forEach(a=>{bt[a.type]=(bt[a.type]||0)+(assetDisplay(a).tl);});
+  const stockTotal=(S.stockPositions||[]).reduce((s,p)=>s+(p.buyPrice*p.qty+(p.commission||0)),0);
+  const assetTotal=S.assets.reduce((s,a)=>s+(assetDisplay(a).tl),0);
+  const total=assetTotal+stockTotal;
+  const bt={};
+  S.assets.forEach(a=>{bt[a.type]=(bt[a.type]||0)+(assetDisplay(a).tl);});
+  if(stockTotal>0) bt["hisse"]=(bt["hisse"]||0)+stockTotal;
   const topTypes=Object.entries(bt).sort((a,b)=>b[1]-a[1]).slice(0,3);
-  ac.innerHTML=`<div class="card c-teal"><div class="card-tag">🏦 Toplam Varlık (TL)</div><div class="card-val" style="color:var(--teal)">${money(total)}</div><div class="card-sub">${S.assets.length} kalem</div></div>${topTypes.map(([t,a])=>`<div class="card"><div class="card-tag">${AI[t]||"📦"} ${t}</div><div class="card-val" style="color:var(--teal)">${money(a)}</div></div>`).join("")}`;
-  al.innerHTML=S.assets.length?S.assets.map(a=>{
+  ac.innerHTML=`<div class="card c-teal"><div class="card-tag">🏦 Toplam Varlık</div><div class="card-val" style="color:var(--teal)">${money(total)}</div><div class="card-sub">${S.assets.length+(S.stockPositions||[]).length} kalem</div></div>${topTypes.map(([t,a])=>`<div class="card"><div class="card-tag">${AI[t]||"📈"} ${t}</div><div class="card-val" style="color:var(--teal)">${money(a)}</div></div>`).join("")}`;
+  // Hisse pozisyonlarını da listele
+  const stockRows=(S.stockPositions||[]).map(p=>{
+    const cost=p.buyPrice*p.qty+(p.commission||0);
+    return `<div class="g-row">
+      <div class="g-row-left">
+        <div class="g-row-title">📈 ${p.sym} <span style="font-size:11px;color:var(--muted)">${p.exchange||"BIST"}</span></div>
+        <div class="g-row-sub">${p.name||p.sym}${p.sector?" · "+p.sector:""} · ${p.qty} adet × ${money(p.buyPrice)}</div>
+      </div>
+      <div class="g-row-right">
+        <div class="g-row-val" style="color:var(--blue)">${money(cost)}</div>
+        ${p.target?`<div style="font-size:11px;color:var(--green)">Hedef: ${money(p.target)}</div>`:""}
+        <div style="display:flex;justify-content:flex-end;margin-top:4px;gap:5px">
+          <button class="btn-sm" style="padding:2px 8px;font-size:11px" onclick="window.H.varlikTab('stocks',$('vt-stocks'))">Portföye Git</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+  al.innerHTML=(S.assets.length||stockRows)?[...S.assets.map(a=>{
     const disp=assetDisplay(a);
     const costStr=a.costTL?` · Alış: ${money(a.costTL)}`:"";
     const gainStr=(a.costTL&&disp.tl&&a.costTL>0)?((disp.tl-a.costTL)/a.costTL*100).toFixed(1):"";
@@ -1489,7 +1511,7 @@ function rAssets(){
         </div>
       </div>
     </div>`;
-  }).join(""):`<div class="empty"><div class="empty-icon">🏦</div><div class="empty-text">Varlık eklenmedi</div></div>`;
+  }).join(""),...[stockRows]].join(""):`<div class="empty"><div class="empty-icon">🏦</div><div class="empty-text">Varlık eklenmedi</div></div>`;
 }
 
 function rGoals(){
