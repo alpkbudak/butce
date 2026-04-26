@@ -402,20 +402,22 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
   </button>
 </nav>
 
-<header>
+<header style="overflow:visible">
   <div class="logo">finans<em>hub</em></div>
   <div class="header-mid" style="position:relative">
     <button id="periodBtn" onclick="window.H.togglePeriodMenu()" style="background:rgba(255,255,255,.1);border:none;color:var(--paper);padding:5px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;font-family:'Bricolage Grotesque',sans-serif;display:flex;align-items:center;gap:6px">
       <span id="periodLabel">Tüm Zamanlar</span> ▾
     </button>
-    <div id="periodMenu" style="display:none;position:absolute;top:38px;left:0;background:white;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);z-index:200;min-width:200px;max-height:320px;overflow-y:auto;padding:4px">
-      <div class="period-opt active" data-period="all" onclick="window.H.setPeriod('all',this)">🗓 Tüm Zamanlar</div>
-      <div id="periodYearOpts"></div>
-    </div>
+
   </div>
   <div id="syncStatus"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">—</span></div>
 </header>
 
+
+<div id="periodMenu" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);background:white;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);z-index:999;min-width:220px;max-height:360px;overflow-y:auto;padding:4px">
+  <div class="period-opt active" data-period="all" onclick="window.H.setPeriod('all',this)">🗓 Tüm Zamanlar</div>
+  <div id="periodYearOpts"></div>
+</div>
 <div class="wrapper">
   <div class="tabs" id="mainTabs">
     <button class="tab active" onclick="window.H.tab('piyasa',this)">🌍 Piyasa</button>
@@ -1774,6 +1776,18 @@ setInterval(()=>MKT.fetch(),60000);
 // WINDOW.H — all public actions
 // ══════════════════════════════════════════
 window.H = {
+  setPeriod(period, el){
+    activePeriod=period;
+    document.querySelectorAll(".period-opt").forEach(o=>o.classList.remove("active"));
+    if(el) el.classList.add("active");
+    const m=$("periodMenu"); if(m) m.style.display="none";
+    render();
+  },
+  togglePeriodMenu(){
+    const m=$("periodMenu"); if(!m) return;
+    // Tüm diğer dropdown'ları kapat
+    m.style.display=m.style.display==="none"?"block":"none";
+  },
   varlikTab(which, btn){
     document.querySelectorAll("[id^='vt-']").forEach(b=>{
       b.style.background="none"; b.style.borderColor="var(--line)"; b.style.color="var(--muted)";
@@ -1950,6 +1964,11 @@ window.H = {
     const pg=$("tab-"+name); if(pg) pg.classList.add("active");
     const dt=document.querySelector(`.tab[onclick*="'${name}'"]`);
     if(dt) dt.classList.add("active");
+    if(name!=="varliklar"){
+      const vps=$("vp-stocks"),vpa=$("vp-assets");
+      if(vps) vps.style.display="none";
+      if(vpa) vpa.style.display="block";
+    }
     render();
   },
   tab(name,btn){
@@ -1957,6 +1976,17 @@ window.H = {
     document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
     $("tab-"+name).classList.add("active");
     btn.classList.add("active");
+    // Varlıklar tab'ından çıkınca reset
+    if(name!=="varliklar"){
+      const vps=$("vp-stocks"), vpa=$("vp-assets");
+      const vtBtns=document.querySelectorAll("[id^='vt-']");
+      if(vps) vps.style.display="none";
+      if(vpa) vpa.style.display="block";
+      // vt butonları reset
+      vtBtns.forEach(b=>{b.style.background="none";b.style.borderColor="var(--line)";b.style.color="var(--muted)";});
+      const vtA=$("vt-assets");
+      if(vtA){vtA.style.background="var(--ink)";vtA.style.borderColor="var(--ink)";vtA.style.color="white";}
+    }
     render();
   },
   changeMonth(d){curMonth.setMonth(curMonth.getMonth()+d);render();},
@@ -2234,6 +2264,12 @@ setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":""
 const today2=new Date().toISOString().split("T")[0];
 ["q_d","f_d"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
 window.addEventListener("resize",()=>rChart());
+document.addEventListener("click", e=>{
+  const menu=$("periodMenu"), btn=$("periodBtn");
+  if(menu && btn && !menu.contains(e.target) && !btn.contains(e.target)){
+    menu.style.display="none";
+  }
+});
 initData();
 </script>
 <script>
