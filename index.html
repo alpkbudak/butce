@@ -1299,7 +1299,7 @@ function rNetWorth() {
 }
 
 function rCards() {
-  const t=monthTxns();
+  const t=monthTxns().filter(x=>x.category!=="transfer");
   const inc=t.filter(x=>x.type==="inc").reduce((s,x)=>s+x.amount,0);
   const exp=t.filter(x=>x.type==="exp").reduce((s,x)=>s+x.amount,0);
   const net=inc-exp, pct=inc>0?Math.round((net/inc)*100):0;
@@ -1347,11 +1347,11 @@ function txnRow(t) {
 }
 function rRecent(){const el=$("recentList");if(!el)return;const l=monthTxns().slice(0,6);el.innerHTML=l.length?l.map(txnRow).join(""):`<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">Bu ay işlem yok</div></div>`;}
 function rTxns(){const el=$("txnList");if(!el)return;const q=val("searchQ").toLowerCase();let l=monthTxns();if(q)l=l.filter(t=>t.name.toLowerCase().includes(q)||getCat(t.category).name.toLowerCase().includes(q));el.innerHTML=l.length?l.map(txnRow).join(""):`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">İşlem bulunamadı</div></div>`;}
-function rCatTags(){const el=$("catTags");if(!el)return;const exp={};monthTxns().filter(t=>t.type==="exp").forEach(t=>{exp[t.category]=(exp[t.category]||0)+t.amount;});const s=Object.entries(exp).sort((a,b)=>b[1]-a[1]).slice(0,8);el.innerHTML=s.length?s.map(([id,amt])=>{const c=getCat(id),col=gc(id);return`<div class="ctag" style="background:${col}18;border-color:${col}40;color:${col}">${c.icon} ${c.name} <strong style="margin-left:3px">${money(amt)}</strong></div>`;}).join(""):`<div style="color:var(--muted);font-size:12px">Henüz gider yok</div>`;}
+function rCatTags(){const el=$("catTags");if(!el)return;const exp={};monthTxns().filter(t=>t.type==="exp"&&t.category!=="transfer").forEach(t=>{exp[t.category]=(exp[t.category]||0)+t.amount;});const s=Object.entries(exp).sort((a,b)=>b[1]-a[1]).slice(0,8);el.innerHTML=s.length?s.map(([id,amt])=>{const c=getCat(id),col=gc(id);return`<div class="ctag" style="background:${col}18;border-color:${col}40;color:${col}">${c.icon} ${c.name} <strong style="margin-left:3px">${money(amt)}</strong></div>`;}).join(""):`<div style="color:var(--muted);font-size:12px">Henüz gider yok</div>`;}
 
 function rBudget(){
   const el=$("budgetBars");if(!el)return;
-  const exp={};monthTxns().filter(t=>t.type==="exp").forEach(t=>{exp[t.category]=(exp[t.category]||0)+t.amount;});
+  const exp={};monthTxns().filter(t=>t.type==="exp"&&t.category!=="transfer").forEach(t=>{exp[t.category]=(exp[t.category]||0)+t.amount;});
   const entries=Object.entries(S.budgets);
   if(!entries.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🎯</div><div class="empty-text">Bütçe eklenmedi</div></div>`;return;}
   el.innerHTML=entries.map(([id,lim])=>{
@@ -1366,7 +1366,7 @@ function rChart(){
   const W=canvas.offsetWidth||600,H=150;canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext("2d");
   const months=[];for(let i=5;i>=0;i--){const d=new Date(curMonth);d.setMonth(d.getMonth()-i);months.push(d);}
-  const gs=(m,type)=>S.transactions.filter(t=>{const d=new Date(t.date);return d.getFullYear()===m.getFullYear()&&d.getMonth()===m.getMonth()&&t.type===type;}).reduce((s,t)=>s+t.amount,0);
+  const gs=(m,type)=>S.transactions.filter(t=>{const d=new Date(t.date);return d.getFullYear()===m.getFullYear()&&d.getMonth()===m.getMonth()&&t.type===type&&t.category!=="transfer";}).reduce((s,t)=>s+t.amount,0);
   const inc=months.map(m=>gs(m,"inc")),exp=months.map(m=>gs(m,"exp"));
   const maxV=Math.max(...inc,...exp,1);
   const pad={t:10,b:28,l:46,r:8},cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
@@ -1378,7 +1378,7 @@ function rChart(){
 
 function rStats(){
   const sc=$("statsCards"),sg=$("statsGrid");if(!sc||!sg)return;
-  const t=monthTxns();
+  const t=monthTxns().filter(x=>x.category!=="transfer");
   const inc=t.filter(x=>x.type==="inc").reduce((s,x)=>s+x.amount,0);
   const exp=t.filter(x=>x.type==="exp").reduce((s,x)=>s+x.amount,0);
   const days=new Date(curMonth.getFullYear(),curMonth.getMonth()+1,0).getDate();
@@ -2319,7 +2319,7 @@ setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":""
 
 // Init
 const today2=new Date().toISOString().split("T")[0];
-["q_d","f_d"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
+["q_d","f_d","tr_date"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
 window.addEventListener("resize",()=>rChart());
 document.addEventListener("click", e=>{
   const menu=$("periodMenu"), btn=$("periodBtn");
