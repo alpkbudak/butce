@@ -1303,7 +1303,7 @@ function rNetWorth() {
 }
 
 function rCards() {
-  const t=monthTxns();
+  const t=monthTxns().filter(x=>x.category!=="transfer");
   const inc=t.filter(x=>x.type==="inc").reduce((s,x)=>s+x.amount,0);
   const exp=t.filter(x=>x.type==="exp").reduce((s,x)=>s+x.amount,0);
   const net=inc-exp, pct=inc>0?Math.round((net/inc)*100):0;
