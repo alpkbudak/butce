@@ -2339,7 +2339,7 @@ setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":""
   async deleteCat(id){await deleteDoc(D("categories",id));toast("Silindi");},
 
   async delDoc(colName,id){
-    const cols={debts:"debts",installments:"installments",creditCards:"creditCards",assets:"assets",goals:"goals",subscriptions:"subscriptions",stocks:"stocks"};
+    const cols={debts:"debts",installments:"installments",creditCards:"creditCards",assets:"assets",goals:"goals",subscriptions:"subscriptions",stocks:"stocks",stockPositions:"stockPositions"};
     if(!cols[colName])return;
     await deleteDoc(D(cols[colName],id));
     toast("Silindi");
