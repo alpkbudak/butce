@@ -25,7 +25,27 @@
   --r:10px;
   --shadow:0 2px 8px rgba(26,26,46,.08);
   --shadow-lg:0 8px 32px rgba(26,26,46,.14);
+  --card-bg:white;
 }
+[data-theme="dark"]{
+  --ink:#e8e6e1;--ink2:#c8c5be;
+  --paper:#141414;--paper2:#1e1e1e;--paper3:#252525;
+  --line:#2e2e2e;--muted:#6b6860;
+  --green:#4ade80;--green-bg:#14532d33;
+  --red:#f87171;--red-bg:#7f1d1d33;
+  --blue:#60a5fa;--blue-bg:#1e3a5f33;
+  --gold:#fbbf24;--gold-bg:#78350f33;
+  --purple:#a78bfa;--purple-bg:#4c1d9533;
+  --teal:#2dd4bf;--teal-bg:#0f4f4933;
+  --shadow:0 2px 8px rgba(0,0,0,.4);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.6);
+  --card-bg:#1e1e1e;
+}
+[data-theme="dark"] .card,[data-theme="dark"] .panel,[data-theme="dark"] .form-box,[data-theme="dark"] .modal{background:var(--card-bg)}
+[data-theme="dark"] .field input,[data-theme="dark"] .field select{background:var(--paper3);color:var(--ink);border-color:var(--line)}
+[data-theme="dark"] .field input::placeholder{color:var(--muted)}
+[data-theme="dark"] canvas{filter:brightness(.9)}
+*{transition:background-color .2s,border-color .2s,color .15s}
 body{font-family:'Instrument Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;font-size:14px}
 h1,h2,h3,h4{font-family:'Bricolage Grotesque',sans-serif}
 header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
@@ -410,7 +430,10 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
     </button>
 
   </div>
-  <div id="syncStatus"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">—</span></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button id="themeBtn" onclick="window.H.toggleTheme()" style="background:rgba(255,255,255,.1);border:none;color:var(--paper);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s" title="Tema değiştir">🌙</button>
+    <div id="syncStatus"><div class="sync-dot" id="syncDot"></div><span id="syncTxt">—</span></div>
+  </div>
 </header>
 
 
@@ -905,16 +928,17 @@ header{background:var(--ink);color:var(--paper);padding:0 24px;height:54px;displ
 
   <!-- İSTATİSTİK -->
   <div id="tab-istatistik" class="page">
-    <div style="display:flex;gap:8px;padding:0 4px 4px">
-      <button id="statsPillExp" class="type-pill sel-exp" onclick="window.H.setStatsType('exp')" style="flex:1;justify-content:center">💸 Giderler</button>
-      <button id="statsPillInc" class="type-pill" onclick="window.H.setStatsType('inc')" style="flex:1;justify-content:center">💰 Gelirler</button>
-    </div>
     <div class="cards" id="statsCards"></div>
     <div class="stat-grid" id="statsGrid"></div>
   </div>
 
   <!-- AYARLAR -->
   <div id="tab-ayarlar" class="page">
+    <div class="sett-section">
+      <div class="sett-row"><div><div class="sett-label">Görünüm</div><div class="sett-sub">Açık veya koyu tema</div></div>
+        <button id="themeToggleBtn" onclick="window.H.toggleTheme()" style="padding:6px 16px;border:1.5px solid var(--line);border-radius:8px;background:none;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">🌙 <span id="themeLabel">Koyu Mod</span></button>
+      </div>
+    </div>
     <div class="sett-section">
       <div class="sett-row"><div><div class="sett-label">Veritabanı</div><div class="sett-sub">Firebase Firestore — gerçek zamanlı senkronizasyon</div></div><div style="font-size:12px;color:var(--muted)" id="settSync">—</div></div>
     </div>
@@ -1303,7 +1327,7 @@ function rNetWorth() {
 }
 
 function rCards() {
-  const t=monthTxns().filter(x=>x.category!=="transfer");
+  const t=monthTxns();
   const inc=t.filter(x=>x.type==="inc").reduce((s,x)=>s+x.amount,0);
   const exp=t.filter(x=>x.type==="exp").reduce((s,x)=>s+x.amount,0);
   const net=inc-exp, pct=inc>0?Math.round((net/inc)*100):0;
@@ -1380,75 +1404,39 @@ function rChart(){
   months.forEach((m,i)=>{const cx=pad.l+gW*i+gW/2;const iH=(inc[i]/maxV)*cH;ctx.fillStyle="#2d6a4f44";ctx.fillRect(cx-bW-2,pad.t+cH-iH,bW,iH);const eH=(exp[i]/maxV)*cH;ctx.fillStyle="#c1121f44";ctx.fillRect(cx+2,pad.t+cH-eH,bW,eH);ctx.fillStyle="#8e8b80";ctx.font="10px sans-serif";ctx.textAlign="center";ctx.fillText(m.toLocaleString("tr-TR",{month:"short"}),cx,H-4);});
 }
 
-let statsType="exp";
-function setStatsType(type){
-  statsType=type;
-  const ep=$("statsPillExp"),ip=$("statsPillInc");
-  if(ep) ep.className="type-pill"+(type==="exp"?" sel-exp":"");
-  if(ip) ip.className="type-pill"+(type==="inc"?" sel-inc":"");
-  rStats();
-}
 function rStats(){
   const sc=$("statsCards"),sg=$("statsGrid");if(!sc||!sg)return;
-  const all=monthTxns().filter(x=>x.category!=="transfer");
-  const inc=all.filter(x=>x.type==="inc").reduce((s,x)=>s+x.amount,0);
-  const exp=all.filter(x=>x.type==="exp").reduce((s,x)=>s+x.amount,0);
-  const isExp=statsType==="exp";
-  const t=all.filter(x=>x.type===statsType);
-  const total=isExp?exp:inc;
+  const t=monthTxns();
+  const inc=t.filter(x=>x.type==="inc").reduce((s,x)=>s+x.amount,0);
+  const exp=t.filter(x=>x.type==="exp").reduce((s,x)=>s+x.amount,0);
   const days=new Date(curMonth.getFullYear(),curMonth.getMonth()+1,0).getDate();
-  const dm={};t.forEach(x=>{dm[x.date]=(dm[x.date]||0)+x.amount;});
+  const dm={};t.filter(x=>x.type==="exp").forEach(x=>{dm[x.date]=(dm[x.date]||0)+x.amount;});
   const td=Object.entries(dm).sort((a,b)=>b[1]-a[1])[0];
-  const ec={};t.forEach(x=>{ec[x.category]=(ec[x.category]||0)+x.amount;});
+  const pm={};t.filter(x=>x.payMethod).forEach(x=>{pm[x.payMethod]=(pm[x.payMethod]||0)+x.amount;});
+  const pmRows=Object.entries(pm).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span style="color:var(--muted)">${PAY_ICO[k]||""} ${PAY_LBL[k]||k}</span><span style="font-weight:600">${money(v)}</span></div>`).join("");
+  sc.innerHTML=`
+    <div class="card c-green"><div class="card-tag">💰 Gelir</div><div class="card-val">${money(inc)}</div></div>
+    <div class="card c-red"><div class="card-tag">💸 Gider</div><div class="card-val">${money(exp)}</div></div>
+    <div class="card c-blue"><div class="card-tag">📅 Günlük Ort.</div><div class="card-val">${money(exp/days)}</div></div>
+    <div class="card c-gold"><div class="card-tag">🔥 En Yoğun Gün</div><div class="card-val" style="font-size:16px">${td?new Date(td[0]).toLocaleDateString("tr-TR",{day:"numeric",month:"short"}):"—"}</div></div>`;
+  const ec={};t.filter(x=>x.type==="exp").forEach(x=>{ec[x.category]=(ec[x.category]||0)+x.amount;});
   const sorted=Object.entries(ec).sort((a,b)=>b[1]-a[1]);
-  if(isExp){
-    const pm={};t.filter(x=>x.payMethod).forEach(x=>{pm[x.payMethod]=(pm[x.payMethod]||0)+x.amount;});
-    const pmRows=Object.entries(pm).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span style="color:var(--muted)">${PAY_ICO[k]||""} ${PAY_LBL[k]||k}</span><span style="font-weight:600">${money(v)}</span></div>`).join("");
-    sc.innerHTML=`
-      <div class="card c-red"><div class="card-tag">💸 Toplam Gider</div><div class="card-val">${money(exp)}</div></div>
-      <div class="card c-green"><div class="card-tag">💰 Toplam Gelir</div><div class="card-val">${money(inc)}</div></div>
-      <div class="card c-blue"><div class="card-tag">📅 Günlük Ort.</div><div class="card-val">${money(exp/days)}</div></div>
-      <div class="card c-gold"><div class="card-tag">🔥 En Yoğun Gün</div><div class="card-val" style="font-size:16px">${td?new Date(td[0]).toLocaleDateString("tr-TR",{day:"numeric",month:"short"}):"—"}</div></div>`;
-    sg.innerHTML=`
-      <div class="panel">
-        <div class="panel-head"><div class="panel-title">Gider Dağılımı</div></div>
-        <div style="padding:14px 18px">${sorted.length?sorted.map(([id,amt])=>{const c=getCat(id),col=gc(id),pct=total>0?(amt/total)*100:0;return`<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px"><span>${c.icon} ${c.name}</span><span style="color:var(--muted)">${pct.toFixed(1)}% · ${money(amt)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div></div>`;}).join(""):`<div class="empty"><div class="empty-text">Veri yok</div></div>`}</div>
+  sg.innerHTML=`
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">Gider Dağılımı</div></div>
+      <div style="padding:14px 18px">${sorted.length?sorted.map(([id,amt])=>{const c=getCat(id),col=gc(id),pct=exp>0?(amt/exp)*100:0;return`<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px"><span>${c.icon} ${c.name}</span><span style="color:var(--muted)">${pct.toFixed(1)}% · ${money(amt)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div></div>`;}).join(""):`<div class="empty"><div class="empty-text">Veri yok</div></div>`}</div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title">Özet</div></div>
+      <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Gelir</span><span style="color:var(--green);font-weight:700">${money(inc)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Gider</span><span style="color:var(--red);font-weight:700">${money(exp)}</span></div>
+        <div style="border-top:1px solid var(--line);padding-top:10px;display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--muted)">Net</span><span style="color:${inc-exp>=0?"var(--green)":"var(--red)"};font-weight:700">${money(inc-exp)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">İşlem Sayısı</span><span>${t.length}</span></div>
+        ${td?`<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">En Yüksek Gün</span><span>${new Date(td[0]).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})} · ${money(td[1])}</span></div>`:""}
+        ${pmRows?`<div style="border-top:1px solid var(--line);padding-top:8px;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:2px">ÖDEME YÖNTEMLERİ</div>${pmRows}`:""}
       </div>
-      <div class="panel">
-        <div class="panel-head"><div class="panel-title">Özet</div></div>
-        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Gelir</span><span style="color:var(--green);font-weight:700">${money(inc)}</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Gider</span><span style="color:var(--red);font-weight:700">${money(exp)}</span></div>
-          <div style="border-top:1px solid var(--line);padding-top:10px;display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--muted)">Net</span><span style="color:${inc-exp>=0?"var(--green)":"var(--red)"};font-weight:700">${money(inc-exp)}</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">İşlem Sayısı</span><span>${t.length}</span></div>
-          ${td?`<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">En Yüksek Gün</span><span>${new Date(td[0]).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})} · ${money(td[1])}</span></div>`:""}
-          ${pmRows?`<div style="border-top:1px solid var(--line);padding-top:8px;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:2px">ÖDEME YÖNTEMLERİ</div>${pmRows}`:""}
-        </div>
-      </div>`;
-  } else {
-    const topItem=sorted[0];
-    sc.innerHTML=`
-      <div class="card c-green"><div class="card-tag">💰 Toplam Gelir</div><div class="card-val">${money(inc)}</div></div>
-      <div class="card c-red"><div class="card-tag">💸 Toplam Gider</div><div class="card-val">${money(exp)}</div></div>
-      <div class="card c-blue"><div class="card-tag">📅 Günlük Ort.</div><div class="card-val">${money(inc/days)}</div></div>
-      <div class="card c-gold"><div class="card-tag">⭐ En Yüksek Kaynak</div><div class="card-val" style="font-size:15px">${topItem?getCat(topItem[0]).icon+" "+getCat(topItem[0]).name:"—"}</div></div>`;
-    sg.innerHTML=`
-      <div class="panel">
-        <div class="panel-head"><div class="panel-title">Gelir Dağılımı</div></div>
-        <div style="padding:14px 18px">${sorted.length?sorted.map(([id,amt])=>{const c=getCat(id),col=gc(id),pct=total>0?(amt/total)*100:0;return`<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px"><span>${c.icon} ${c.name}</span><span style="color:var(--muted)">${pct.toFixed(1)}% · ${money(amt)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div></div>`;}).join(""):`<div class="empty"><div class="empty-text">Bu ay gelir girişi yok</div></div>`}</div>
-      </div>
-      <div class="panel">
-        <div class="panel-head"><div class="panel-title">Özet</div></div>
-        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Toplam Gelir</span><span style="color:var(--green);font-weight:700">${money(inc)}</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Toplam Gider</span><span style="color:var(--red);font-weight:700">${money(exp)}</span></div>
-          <div style="border-top:1px solid var(--line);padding-top:10px;display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--muted)">Net Tasarruf</span><span style="color:${inc-exp>=0?"var(--green)":"var(--red)"};font-weight:700">${money(inc-exp)}</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Tasarruf Oranı</span><span style="font-weight:600">${inc>0?((inc-exp)/inc*100).toFixed(1)+"%":"—"}</span></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Gelir İşlem Sayısı</span><span>${t.length}</span></div>
-          ${td?`<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">En Yüksek Gün</span><span>${new Date(td[0]).toLocaleDateString("tr-TR",{day:"numeric",month:"short"})} · ${money(td[1])}</span></div>`:""}
-        </div>
-      </div>`;
-  }
+    </div>`;
 }
 
 function rDebts(){
@@ -2088,7 +2076,6 @@ window.H = {
   },
   changeMonth(d){curMonth.setMonth(curMonth.getMonth()+d);render();},
 setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":"");$("fPillInc").className="type-pill"+(t==="inc"?" sel-inc":"");fillSelects();},
-  setStatsType,
   renderTxns:rTxns,
 
   async addTxn(form){
@@ -2339,7 +2326,7 @@ setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":""
   async deleteCat(id){await deleteDoc(D("categories",id));toast("Silindi");},
 
   async delDoc(colName,id){
-    const cols={debts:"debts",installments:"installments",creditCards:"creditCards",assets:"assets",goals:"goals",subscriptions:"subscriptions",stocks:"stocks",stockPositions:"stockPositions"};
+    const cols={debts:"debts",installments:"installments",creditCards:"creditCards",assets:"assets",goals:"goals",subscriptions:"subscriptions",stocks:"stocks"};
     if(!cols[colName])return;
     await deleteDoc(D(cols[colName],id));
     toast("Silindi");
@@ -2352,6 +2339,16 @@ setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":""
     await b.commit(); toast("Temizlendi","ok");
   },
 
+  toggleTheme(){
+    const isDark=document.documentElement.getAttribute("data-theme")==="dark";
+    const next=isDark?"light":"dark";
+    document.documentElement.setAttribute("data-theme",next);
+    localStorage.setItem("theme",next);
+    const btn=$("themeBtn"), lbl=$("themeLabel"), tbtn=$("themeToggleBtn");
+    if(btn) btn.textContent=next==="dark"?"☀️":"🌙";
+    if(lbl) lbl.textContent=next==="dark"?"Açık Mod":"Koyu Mod";
+    if(tbtn) tbtn.querySelector("span").textContent=next==="dark"?"Açık Mod":"Koyu Mod";
+  },
   exportData(){
     const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
     const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="finansal_hub.json"; a.click();
@@ -2360,6 +2357,16 @@ setFType(t){fType=t;$("fPillExp").className="type-pill"+(t==="exp"?" sel-exp":""
 
 // Init
 const today2=new Date().toISOString().split("T")[0];
+(function(){
+  const t=localStorage.getItem("theme")||"light";
+  if(t==="dark"){
+    document.documentElement.setAttribute("data-theme","dark");
+    const btn=document.getElementById("themeBtn");
+    if(btn) btn.textContent="☀️";
+    const lbl=document.getElementById("themeLabel");
+    if(lbl) lbl.textContent="Açık Mod";
+  }
+})();
 ["q_d","f_d"].forEach(id=>{const el=$(id);if(el)el.value=today2;});
 window.addEventListener("resize",()=>rChart());
 document.addEventListener("click", e=>{
